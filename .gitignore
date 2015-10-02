@@ -1,0 +1,8 @@
+*.tlog
+*.pdb
+Project/EUTS/Debug/
+Project/EUTS/EUTS/Debug/vc120.idb
+Project/EUTS/EUTS/Debug/EUTS.log
+*.obj
+*.suo
+*.sdf
