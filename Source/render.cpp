@@ -111,7 +111,7 @@ void initWindow(EUTS_Window *window)
 	return;
 }
 
-void initD3D11(EUTS_Window *window, EUTS_D3D11Context *context)
+void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 {
 	HRESULT result;
 	IDXGIFactory* factory;
@@ -146,7 +146,7 @@ void initD3D11(EUTS_Window *window, EUTS_D3D11Context *context)
 	result = adapterOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, displayModeList);
 	assert(!FAILED(result));
 
-	for (int i = 0; i < numModes; i++)
+	for (unsigned int i = 0; i < numModes; i++)
 	{
 		if (displayModeList[i].Width == window->width)
 		{
@@ -161,10 +161,10 @@ void initD3D11(EUTS_Window *window, EUTS_D3D11Context *context)
 	result = adapter->GetDesc(&adapterDesc);
 	assert(!FAILED(result));
 
-	context->videoMemoryInMB = adapterDesc.DedicatedVideoMemory / 1024.0f / 1024.0f;
+	renderState->videoMemoryInMB = adapterDesc.DedicatedVideoMemory / 1024.0f / 1024.0f;
 
 	size_t stringLength;
-	wcstombs_s(&stringLength, context->videoCardDescription, 128, adapterDesc.Description, 128);
+	wcstombs_s(&stringLength, renderState->videoCardDescription, 128, adapterDesc.Description, 128);
 
 	delete[] displayModeList;
 	adapterOutput->Release();
@@ -215,14 +215,14 @@ void initD3D11(EUTS_Window *window, EUTS_D3D11Context *context)
 
 	D3D_FEATURE_LEVEL featureLevel;
 	featureLevel = D3D_FEATURE_LEVEL_11_0;
-	result = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, &featureLevel, 1, D3D11_SDK_VERSION, &swapChainDesc, &(context->swapChain), &(context->device), NULL, &(context->deviceContext));
+	result = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, &featureLevel, 1, D3D11_SDK_VERSION, &swapChainDesc, &(renderState->swapChain), &(renderState->device), NULL, &(renderState->deviceContext));
 	assert(!FAILED(result));
 
 
-	result = context->swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBufferPtr);
+	result = renderState->swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBufferPtr);
 	assert(!FAILED(result));
 
-	result = context->device->CreateRenderTargetView(backBufferPtr, NULL, &(context->renderTargetView));
+	result = renderState->device->CreateRenderTargetView(backBufferPtr, NULL, &(renderState->renderTargetView));
 	assert(!FAILED(result));
 
 	backBufferPtr->Release();
@@ -240,7 +240,7 @@ void initD3D11(EUTS_Window *window, EUTS_D3D11Context *context)
 	depthBufferDesc.CPUAccessFlags = 0;
 	depthBufferDesc.MiscFlags = 0;
 
-	result = context->device->CreateTexture2D(&depthBufferDesc, NULL, &(context->depthStencilBuffer));
+	result = renderState->device->CreateTexture2D(&depthBufferDesc, NULL, &(renderState->depthStencilBuffer));
 	assert(!FAILED(result));
 
 	ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
@@ -262,20 +262,20 @@ void initD3D11(EUTS_Window *window, EUTS_D3D11Context *context)
 	depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 	depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
-	result = context->device->CreateDepthStencilState(&depthStencilDesc, &(context->depthStencilState));
+	result = renderState->device->CreateDepthStencilState(&depthStencilDesc, &(renderState->depthStencilState));
 	assert(!FAILED(result));
 
-	context->deviceContext->OMSetDepthStencilState(context->depthStencilState, 1);
+	renderState->deviceContext->OMSetDepthStencilState(renderState->depthStencilState, 1);
 
 	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
 	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	depthStencilViewDesc.Texture2D.MipSlice = 0;
 
-	result = context->device->CreateDepthStencilView(context->depthStencilBuffer, &depthStencilViewDesc, &(context->depthStencilView));
+	result = renderState->device->CreateDepthStencilView(renderState->depthStencilBuffer, &depthStencilViewDesc, &(renderState->depthStencilView));
 	assert(!FAILED(result));
 
-	context->deviceContext->OMSetRenderTargets(1, &(context->renderTargetView), context->depthStencilView);
+	renderState->deviceContext->OMSetRenderTargets(1, &(renderState->renderTargetView), renderState->depthStencilView);
 
 	rasterDesc.AntialiasedLineEnable = false;
 	rasterDesc.CullMode = D3D11_CULL_BACK;
@@ -288,10 +288,10 @@ void initD3D11(EUTS_Window *window, EUTS_D3D11Context *context)
 	rasterDesc.ScissorEnable = false;
 	rasterDesc.SlopeScaledDepthBias = 0.0f;
 
-	result = context->device->CreateRasterizerState(&rasterDesc, &(context->rasterState));
+	result = renderState->device->CreateRasterizerState(&rasterDesc, &(renderState->rasterState));
 	assert(!FAILED(result));
 
-	context->deviceContext->RSSetState(context->rasterState);
+	renderState->deviceContext->RSSetState(renderState->rasterState);
 
 	viewport.Width = float(window->width);
 	viewport.Height = float(window->height);
@@ -299,52 +299,52 @@ void initD3D11(EUTS_Window *window, EUTS_D3D11Context *context)
 	viewport.MaxDepth = 1.0f;
 	viewport.TopLeftX = 0.0f;
 	viewport.TopLeftY = 0.0f;
-	context->deviceContext->RSSetViewports(1, &viewport);
+	renderState->deviceContext->RSSetViewports(1, &viewport);
 
 	fieldOfView = 3.141592654f / 4.0f;
 	screenAspect = window->width / (float)(window->height);
-	context->projectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, SCREEN_NEAR, SCREEN_DEPTH);
-	context->worldMatrix = XMMatrixIdentity();
+	renderState->projectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, SCREEN_NEAR, SCREEN_DEPTH);
+	renderState->worldMatrix = XMMatrixIdentity();
 }
 
-void finalizeD3D11(EUTS_D3D11Context *context)
+void finalizeD3D11(EUTS_RenderState *renderState)
 {
-	context->swapChain->SetFullscreenState(false, NULL);
-	context->rasterState->Release();
-	context->depthStencilView->Release();
-	context->depthStencilState->Release();
-	context->depthStencilBuffer->Release();
-	context->renderTargetView->Release();
-	context->deviceContext->Release();
-	context->device->Release();
-	context->swapChain->Release();
+	renderState->swapChain->SetFullscreenState(false, NULL);
+	renderState->rasterState->Release();
+	renderState->depthStencilView->Release();
+	renderState->depthStencilState->Release();
+	renderState->depthStencilBuffer->Release();
+	renderState->renderTargetView->Release();
+	renderState->deviceContext->Release();
+	renderState->device->Release();
+	renderState->swapChain->Release();
 }
 
-void beginScene(EUTS_D3D11Context *context)
+void beginScene(EUTS_RenderState *renderState)
 {
 	float color[4] = { 0.5f, 0.8f, 1.0f, 1.0f };
 
-	context->deviceContext->ClearRenderTargetView(context->renderTargetView, color);
+	renderState->deviceContext->ClearRenderTargetView(renderState->renderTargetView, color);
 
-	context->deviceContext->ClearDepthStencilView(context->depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	renderState->deviceContext->ClearDepthStencilView(renderState->depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }
 
-void endScene(EUTS_D3D11Context *context)
+void endScene(EUTS_RenderState *renderState)
 {
 	if (VSYNC)
 	{
-		context->swapChain->Present(1, 0);
+		renderState->swapChain->Present(1, 0);
 	}
 	else
 	{
-		context->swapChain->Present(0, 0);
+		renderState->swapChain->Present(0, 0);
 	}
 }
 
-void render(EUTS_D3D11Context *context)
+void render(EUTS_RenderState *renderState)
 {
-	beginScene(context);
-	endScene(context);
+	beginScene(renderState);
+	endScene(renderState);
 }
 
 struct EUTS_Vertex
@@ -354,7 +354,7 @@ struct EUTS_Vertex
 };
 
 // intialize a mesh to a triangle...
-void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_D3D11Context *context)
+void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_RenderState *renderState)
 {
 	EUTS_Vertex *vertices;
 	unsigned long *indices;
@@ -393,7 +393,7 @@ void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_D3D11Context *context)
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
-	result = context->device->CreateBuffer(&vertexBufferDesc, &vertexData, &(mesh->vertexBuffer));
+	result = renderState->device->CreateBuffer(&vertexBufferDesc, &vertexData, &(mesh->vertexBuffer));
 	assert(!FAILED(result));
 
 	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -407,7 +407,7 @@ void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_D3D11Context *context)
 	indexData.SysMemPitch = 0;
 	indexData.SysMemSlicePitch = 0;
 
-	result = context->device->CreateBuffer(&indexBufferDesc, &indexData, &(mesh->indexBuffer));
+	result = renderState->device->CreateBuffer(&indexBufferDesc, &indexData, &(mesh->indexBuffer));
 	assert(!FAILED(result));
 
 	delete[] vertices;
@@ -420,7 +420,7 @@ void EUTS_Mesh_finalize(EUTS_Mesh *mesh)
 	mesh->vertexBuffer->Release();
 }
 
-void EUTS_Mesh_bind(EUTS_Mesh *mesh, EUTS_D3D11Context *context)
+void EUTS_Mesh_bind(EUTS_Mesh *mesh, EUTS_RenderState *renderState)
 {
 	unsigned int stride;
 	unsigned int offset;
@@ -428,7 +428,34 @@ void EUTS_Mesh_bind(EUTS_Mesh *mesh, EUTS_D3D11Context *context)
 	stride = sizeof(EUTS_Vertex);
 	offset = 0;
 
-	context->deviceContext->IASetVertexBuffers(0, 1, &(mesh->vertexBuffer), &stride, &offset);
-	context->deviceContext->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-	context->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	renderState->deviceContext->IASetVertexBuffers(0, 1, &(mesh->vertexBuffer), &stride, &offset);
+	renderState->deviceContext->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	renderState->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+
+struct EUTS_Shader
+{
+	ID3D11VertexShader* m_vertexShader;
+	ID3D11PixelShader* m_pixelShader;
+	ID3D11InputLayout* m_layout;
+	ID3D11Buffer* m_matrixBuffer;
+};
+
+void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, const char *vsFilename, const char *fsFilename)
+{
+	HRESULT result;
+	ID3DBlob *errorMessage;
+	ID3DBlob *vertexShaderBuffer;
+	ID3DBlob *pixelShaderBuffer;
+	D3D11_INPUT_ELEMENT_DESC polygonLayout[2]; // Better name?
+	unsigned int numElements;
+	D3D11_BUFFER_DESC matrixBufferDesc;
+	
+	errorMessage = 0;
+	vertexShaderBuffer = 0;
+	pixelShaderBuffer = 0;
+
+	result = D3DCompileFromFile(vsFilename, NULL, NULL, "main", "vs_5_0", 
+		D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
 }

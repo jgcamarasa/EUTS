@@ -10,18 +10,18 @@ int main()
 	EUTS_Window window;
 	initWindow(&window);
 
-	EUTS_D3D11Context d3d11Context;
-	initD3D11(&window, &d3d11Context);
+	EUTS_RenderState renderState;
+	initD3D11(&window, &renderState);
 	
 	EUTS_Mesh mesh;
 
-	EUTS_Mesh_initialize(&mesh, &d3d11Context);
-	EUTS_Mesh_bind(&mesh, &d3d11Context);
+	EUTS_Mesh_initialize(&mesh, &renderState);
+	EUTS_Mesh_bind(&mesh, &renderState);
 	EUTS_Mesh_finalize(&mesh);
 
 	// Loop
 	MSG msg;
-	bool done, result;
+	bool done;
 
 
 	// Initialize the message structure.
@@ -46,12 +46,12 @@ int main()
 		else
 		{
 			// Otherwise do the frame processing.
-			render(&d3d11Context);
+			render(&renderState);
 		}
 
 	}
 
-	finalizeD3D11(&d3d11Context);
+	finalizeD3D11(&renderState);
 
 	return 0;
 }

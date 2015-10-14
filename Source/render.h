@@ -4,6 +4,7 @@
 #include <Windows.h>
 #include <d3d11.h>
 #include <DirectXMath.h>
+#include <d3dcompiler.h>
 
 using namespace DirectX;
 
@@ -30,10 +31,8 @@ struct EUTS_Window
 void initWindow(EUTS_Window *window);
 
 
-struct EUTS_D3D11Context
+struct EUTS_RenderState
 {
-	float					videoMemoryInMB;
-	char					videoCardDescription[128];
 	IDXGISwapChain			*swapChain;
 	ID3D11Device			*device;
 	ID3D11DeviceContext		*deviceContext;
@@ -44,13 +43,15 @@ struct EUTS_D3D11Context
 	ID3D11RasterizerState	*rasterState;
 	XMMATRIX				projectionMatrix;
 	XMMATRIX				worldMatrix;
+	float					videoMemoryInMB;
+	char					videoCardDescription[128];
 };
 
-void initD3D11(EUTS_Window *window, EUTS_D3D11Context *context);
+void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState);
 
-void finalizeD3D11(EUTS_D3D11Context *context);
+void finalizeD3D11(EUTS_RenderState *renderState);
 
-void render(EUTS_D3D11Context *context);
+void render(EUTS_RenderState *renderState);
 
 
 struct EUTS_Mesh
@@ -61,8 +62,8 @@ struct EUTS_Mesh
 	int				indexCount;
 };
 
-void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_D3D11Context *context);
+void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_RenderState *renderState);
 
 void EUTS_Mesh_finalize(EUTS_Mesh *mesh);
 
-void EUTS_Mesh_bind(EUTS_Mesh *mesh, EUTS_D3D11Context *context);
+void EUTS_Mesh_bind(EUTS_Mesh *mesh, EUTS_RenderState *renderState);
