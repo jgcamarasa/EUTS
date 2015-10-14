@@ -442,7 +442,14 @@ struct EUTS_Shader
 	ID3D11VertexShader* vertexShader;
 	ID3D11PixelShader* pixelShader;
 	ID3D11InputLayout* layout;
-	ID3D11Buffer* matrixBuffer;
+	ID3D11Buffer* constantBuffer;
+};
+
+struct EUTS_VSConstantBuffer
+{
+	XMMATRIX world;
+	XMMATRIX view;
+	XMMATRIX projection;
 };
 
 void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, WCHAR *vsFilename, WCHAR *psFilename)
@@ -453,7 +460,7 @@ void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, 
 	ID3DBlob *pixelShaderBuffer;
 	D3D11_INPUT_ELEMENT_DESC layout[2]; 
 	unsigned int numElements;
-	D3D11_BUFFER_DESC matrixBufferDesc;
+	D3D11_BUFFER_DESC constantBufferDesc;
 	HWND hwnd = renderState->window->handler;
 	
 	errorMessage = 0;
@@ -520,6 +527,15 @@ void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, 
 
 	vertexShaderBuffer->Release();
 	pixelShaderBuffer->Release();
+
+	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	constantBufferDesc.ByteWidth = sizeof(EUTS_VSConstantBuffer);
+	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	constantBufferDesc.MiscFlags = 0;
+	constantBufferDesc.StructureByteStride = 0;
+
+	result = renderState->device->CreateBuffer(&constantBufferDesc, NULL, &(shader->constantBuffer));
 }
 
 void outputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
@@ -543,4 +559,12 @@ void outputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shader
 	MessageBox(hwnd, L"Error compiling shader.  Check shader-error.txt for message.", shaderFilename, MB_OK);
 
 	return;
+}
+
+void EUTS_Shader_finalize(EUTS_Shader *shader)
+{
+	shader->constantBuffer->Release();
+	shader->layout->Release();
+	shader->pixelShader->Release();
+	shader->vertexShader->Release();
 }
