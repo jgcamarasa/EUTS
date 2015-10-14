@@ -1,4 +1,5 @@
 #include "render.h"
+#include <stdio.h>
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -305,6 +306,8 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 	screenAspect = window->width / (float)(window->height);
 	renderState->projectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, SCREEN_NEAR, SCREEN_DEPTH);
 	renderState->worldMatrix = XMMatrixIdentity();
+	
+	renderState->window = window;
 }
 
 void finalizeD3D11(EUTS_RenderState *renderState)
@@ -436,21 +439,22 @@ void EUTS_Mesh_bind(EUTS_Mesh *mesh, EUTS_RenderState *renderState)
 
 struct EUTS_Shader
 {
-	ID3D11VertexShader* m_vertexShader;
-	ID3D11PixelShader* m_pixelShader;
-	ID3D11InputLayout* m_layout;
-	ID3D11Buffer* m_matrixBuffer;
+	ID3D11VertexShader* vertexShader;
+	ID3D11PixelShader* pixelShader;
+	ID3D11InputLayout* layout;
+	ID3D11Buffer* matrixBuffer;
 };
 
-void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, const char *vsFilename, const char *fsFilename)
+void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, WCHAR *vsFilename, WCHAR *psFilename)
 {
 	HRESULT result;
 	ID3DBlob *errorMessage;
 	ID3DBlob *vertexShaderBuffer;
 	ID3DBlob *pixelShaderBuffer;
-	D3D11_INPUT_ELEMENT_DESC polygonLayout[2]; // Better name?
+	D3D11_INPUT_ELEMENT_DESC layout[2]; 
 	unsigned int numElements;
 	D3D11_BUFFER_DESC matrixBufferDesc;
+	HWND hwnd = renderState->window->handler;
 	
 	errorMessage = 0;
 	vertexShaderBuffer = 0;
@@ -458,4 +462,85 @@ void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, 
 
 	result = D3DCompileFromFile(vsFilename, NULL, NULL, "main", "vs_5_0", 
 		D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
+
+	if (FAILED(result))
+	{
+		if (errorMessage)
+		{
+			outputShaderErrorMessage(errorMessage, hwnd, vsFilename);
+		}
+		else
+		{
+			MessageBox(hwnd, vsFilename, L"Missing Shader File", MB_OK);
+		}
+	}
+
+	result = D3DCompileFromFile(psFilename, NULL, NULL, "main", "ps_5_0",
+		D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
+
+	if (FAILED(result))
+	{
+		if (errorMessage)
+		{
+			outputShaderErrorMessage(errorMessage, hwnd, psFilename);
+		}
+		else
+		{
+			MessageBox(hwnd, psFilename, L"Missing Shader File", MB_OK);
+		}
+		assert(false);
+	}
+
+	result = renderState->device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &(shader->vertexShader));
+	assert(!FAILED(result));
+
+	result = renderState->device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &(shader->pixelShader));
+	assert(!FAILED(result));
+
+	layout[0].SemanticName = "POSITION";
+	layout[0].SemanticIndex = 0;
+	layout[0].Format = DXGI_FORMAT_R32G32B32_FLOAT; // float3
+	layout[0].InputSlot = 0;
+	layout[0].AlignedByteOffset = 0;
+	layout[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+	layout[0].InstanceDataStepRate = 0;
+
+	layout[1].SemanticName = "COLOR";
+	layout[1].SemanticIndex = 0;
+	layout[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT; // float4
+	layout[1].InputSlot = 0;
+	layout[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+	layout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+	layout[1].InstanceDataStepRate = 0;
+
+	numElements = sizeof(layout) / sizeof(layout[0]);
+
+	result = renderState->device->CreateInputLayout(layout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &(shader->layout));
+	assert(!FAILED(result));
+
+	vertexShaderBuffer->Release();
+	pixelShaderBuffer->Release();
+}
+
+void outputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
+{
+	char* compileErrors;
+	unsigned long long bufferSize, i;
+
+	// Get a pointer to the error message text buffer.
+	compileErrors = (char*)(errorMessage->GetBufferPointer());
+
+	// Get the length of the message.
+	bufferSize = errorMessage->GetBufferSize();
+
+	printf("ShaderError:\n%s", compileErrors);
+
+	// Release the error message.
+	errorMessage->Release();
+	errorMessage = 0;
+
+	// Pop a message up on the screen to notify the user to check the text file for compile errors.
+	MessageBox(hwnd, L"Error compiling shader.  Check shader-error.txt for message.", shaderFilename, MB_OK);
+
+	return;
 }

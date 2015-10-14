@@ -20,7 +20,7 @@ const float SCREEN_DEPTH = 1000.0f;
 
 struct EUTS_Window
 {
-	HWND handler; // Window handler
+	HWND handler;		// Window handler
 	HINSTANCE instance; // Application instance
 	LPCWSTR title;		// Title
 	UINT32 width;		// Width
@@ -43,6 +43,7 @@ struct EUTS_RenderState
 	ID3D11RasterizerState	*rasterState;
 	XMMATRIX				projectionMatrix;
 	XMMATRIX				worldMatrix;
+	EUTS_Window				*window; // This struct DOESN'T have the ownership of this
 	float					videoMemoryInMB;
 	char					videoCardDescription[128];
 };
