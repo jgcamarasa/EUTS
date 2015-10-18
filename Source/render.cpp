@@ -1,5 +1,4 @@
 #include "render.h"
-#include <stdio.h>
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -95,6 +94,7 @@ void initWindow(EUTS_Window *window)
 
 	window->width = screenWidth;
 	window->height = screenHeight;
+	window->fullScreen = FULLSCREEN;
 
 	// Create the window with the screen settings and get the handle to it.
 	window->handler = CreateWindowEx(WS_EX_APPWINDOW, window->title, window->title,
@@ -216,7 +216,11 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 
 	D3D_FEATURE_LEVEL featureLevel;
 	featureLevel = D3D_FEATURE_LEVEL_11_0;
-	result = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, &featureLevel, 1, D3D11_SDK_VERSION, &swapChainDesc, &(renderState->swapChain), &(renderState->device), NULL, &(renderState->deviceContext));
+	int creationFlags = 0;
+#ifdef _DEBUG
+	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+	result = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, &featureLevel, 1, D3D11_SDK_VERSION, &swapChainDesc, &(renderState->swapChain), &(renderState->device), NULL, &(renderState->deviceContext));
 	assert(!FAILED(result));
 
 
@@ -344,227 +348,54 @@ void endScene(EUTS_RenderState *renderState)
 	}
 }
 
-void render(EUTS_RenderState *renderState)
+
+void EUTS_Camera_setPosition(EUTS_Camera *camera, float posX, float posY, float posZ)
 {
-	beginScene(renderState);
-	endScene(renderState);
+	camera->posX = posX;
+	camera->posY = posY;
+	camera->posZ = posZ;
 }
 
-struct EUTS_Vertex
+void EUTS_Camera_setRotation(EUTS_Camera *camera, float rotX, float rotY, float rotZ)
 {
-	XMFLOAT3 position;
-	XMFLOAT4 color;
-};
-
-// intialize a mesh to a triangle...
-void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_RenderState *renderState)
-{
-	EUTS_Vertex *vertices;
-	unsigned long *indices;
-	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
-	D3D11_SUBRESOURCE_DATA vertexData, indexData;
-	HRESULT result;
-
-	mesh->vertexCount = 3;
-	mesh->indexCount = 3;
-	vertices = new EUTS_Vertex[mesh->vertexCount];
-	indices = new unsigned long[mesh->indexCount];
-
-	// Load the vertex array with data.
-	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
-	vertices[0].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
-
-	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
-	vertices[1].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
-
-	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
-	vertices[2].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
-
-	// Load the index array with data.
-	indices[0] = 0;  // Bottom left.
-	indices[1] = 1;  // Top middle.
-	indices[2] = 2;  // Bottom right.
-
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(EUTS_Vertex)*mesh->vertexCount;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = 0;
-
-	vertexData.pSysMem = vertices;
-	vertexData.SysMemPitch = 0;
-	vertexData.SysMemSlicePitch = 0;
-
-	result = renderState->device->CreateBuffer(&vertexBufferDesc, &vertexData, &(mesh->vertexBuffer));
-	assert(!FAILED(result));
-
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(unsigned long)*mesh->indexCount;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
-	indexBufferDesc.MiscFlags = 0;
-	indexBufferDesc.StructureByteStride = 0;
-
-	indexData.pSysMem = indices;
-	indexData.SysMemPitch = 0;
-	indexData.SysMemSlicePitch = 0;
-
-	result = renderState->device->CreateBuffer(&indexBufferDesc, &indexData, &(mesh->indexBuffer));
-	assert(!FAILED(result));
-
-	delete[] vertices;
-	delete[] indices;
+	camera->rotX = rotX;
+	camera->rotY = rotY;
+	camera->rotZ = rotZ;
 }
 
-void EUTS_Mesh_finalize(EUTS_Mesh *mesh)
+void EUTS_Camera_update(EUTS_Camera *camera)
 {
-	mesh->indexBuffer->Release();
-	mesh->vertexBuffer->Release();
-}
+	XMFLOAT3 up, position, lookAt;
+	XMVECTOR upVector, positionVector, lookAtVector;
+	float yaw, pitch, roll;
+	XMMATRIX rotationMatrix;
 
-void EUTS_Mesh_bind(EUTS_Mesh *mesh, EUTS_RenderState *renderState)
-{
-	unsigned int stride;
-	unsigned int offset;
+	up.x = 0.0f;
+	up.y = 1.0f;
+	up.z = 0.0f;
 
-	stride = sizeof(EUTS_Vertex);
-	offset = 0;
+	upVector = XMLoadFloat3(&up);
 
-	renderState->deviceContext->IASetVertexBuffers(0, 1, &(mesh->vertexBuffer), &stride, &offset);
-	renderState->deviceContext->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-	renderState->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-}
+	position.x = camera->posX;
+	position.y = camera->posY;
+	position.z = camera->posZ;
 
+	positionVector = XMLoadFloat3(&position);
 
-struct EUTS_Shader
-{
-	ID3D11VertexShader* vertexShader;
-	ID3D11PixelShader* pixelShader;
-	ID3D11InputLayout* layout;
-	ID3D11Buffer* constantBuffer;
-};
+	lookAt.x = 0.0f;
+	lookAt.y = 0.0f;
+	lookAt.z = 1.0f;
 
-struct EUTS_VSConstantBuffer
-{
-	XMMATRIX world;
-	XMMATRIX view;
-	XMMATRIX projection;
-};
+	lookAtVector = XMLoadFloat3(&lookAt);
 
-void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, WCHAR *vsFilename, WCHAR *psFilename)
-{
-	HRESULT result;
-	ID3DBlob *errorMessage;
-	ID3DBlob *vertexShaderBuffer;
-	ID3DBlob *pixelShaderBuffer;
-	D3D11_INPUT_ELEMENT_DESC layout[2]; 
-	unsigned int numElements;
-	D3D11_BUFFER_DESC constantBufferDesc;
-	HWND hwnd = renderState->window->handler;
-	
-	errorMessage = 0;
-	vertexShaderBuffer = 0;
-	pixelShaderBuffer = 0;
+	pitch = camera->rotX;
+	yaw = camera->rotY;
+	roll = camera->rotZ;
 
-	result = D3DCompileFromFile(vsFilename, NULL, NULL, "main", "vs_5_0", 
-		D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
+	rotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
 
-	if (FAILED(result))
-	{
-		if (errorMessage)
-		{
-			outputShaderErrorMessage(errorMessage, hwnd, vsFilename);
-		}
-		else
-		{
-			MessageBox(hwnd, vsFilename, L"Missing Shader File", MB_OK);
-		}
-	}
-
-	result = D3DCompileFromFile(psFilename, NULL, NULL, "main", "ps_5_0",
-		D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
-
-	if (FAILED(result))
-	{
-		if (errorMessage)
-		{
-			outputShaderErrorMessage(errorMessage, hwnd, psFilename);
-		}
-		else
-		{
-			MessageBox(hwnd, psFilename, L"Missing Shader File", MB_OK);
-		}
-		assert(false);
-	}
-
-	result = renderState->device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &(shader->vertexShader));
-	assert(!FAILED(result));
-
-	result = renderState->device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &(shader->pixelShader));
-	assert(!FAILED(result));
-
-	layout[0].SemanticName = "POSITION";
-	layout[0].SemanticIndex = 0;
-	layout[0].Format = DXGI_FORMAT_R32G32B32_FLOAT; // float3
-	layout[0].InputSlot = 0;
-	layout[0].AlignedByteOffset = 0;
-	layout[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-	layout[0].InstanceDataStepRate = 0;
-
-	layout[1].SemanticName = "COLOR";
-	layout[1].SemanticIndex = 0;
-	layout[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT; // float4
-	layout[1].InputSlot = 0;
-	layout[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-	layout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-	layout[1].InstanceDataStepRate = 0;
-
-	numElements = sizeof(layout) / sizeof(layout[0]);
-
-	result = renderState->device->CreateInputLayout(layout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &(shader->layout));
-	assert(!FAILED(result));
-
-	vertexShaderBuffer->Release();
-	pixelShaderBuffer->Release();
-
-	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	constantBufferDesc.ByteWidth = sizeof(EUTS_VSConstantBuffer);
-	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	constantBufferDesc.MiscFlags = 0;
-	constantBufferDesc.StructureByteStride = 0;
-
-	result = renderState->device->CreateBuffer(&constantBufferDesc, NULL, &(shader->constantBuffer));
-}
-
-void outputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
-{
-	char* compileErrors;
-	unsigned long long bufferSize, i;
-
-	// Get a pointer to the error message text buffer.
-	compileErrors = (char*)(errorMessage->GetBufferPointer());
-
-	// Get the length of the message.
-	bufferSize = errorMessage->GetBufferSize();
-
-	printf("ShaderError:\n%s", compileErrors);
-
-	// Release the error message.
-	errorMessage->Release();
-	errorMessage = 0;
-
-	// Pop a message up on the screen to notify the user to check the text file for compile errors.
-	MessageBox(hwnd, L"Error compiling shader.  Check shader-error.txt for message.", shaderFilename, MB_OK);
-
-	return;
-}
-
-void EUTS_Shader_finalize(EUTS_Shader *shader)
-{
-	shader->constantBuffer->Release();
-	shader->layout->Release();
-	shader->pixelShader->Release();
-	shader->vertexShader->Release();
+	lookAtVector = XMVector3TransformCoord(lookAtVector, rotationMatrix);
+	upVector = XMVector3TransformCoord(upVector, rotationMatrix);
+	lookAtVector = XMVectorAdd(positionVector, lookAtVector);
+	camera->viewMatrix = XMMatrixLookAtLH(positionVector, lookAtVector, upVector);
 }

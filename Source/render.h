@@ -52,19 +52,20 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState);
 
 void finalizeD3D11(EUTS_RenderState *renderState);
 
-void render(EUTS_RenderState *renderState);
+void beginScene(EUTS_RenderState *renderState);
+
+void endScene(EUTS_RenderState *renderState);
 
 
-struct EUTS_Mesh
+struct EUTS_Camera
 {
-	ID3D11Buffer	*vertexBuffer;
-	ID3D11Buffer	*indexBuffer;
-	int				vertexCount;
-	int				indexCount;
+	float posX, posY, posZ;
+	float rotX, rotY, rotZ; // radians
+	XMMATRIX viewMatrix;
 };
 
-void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_RenderState *renderState);
+void EUTS_Camera_setPosition(EUTS_Camera *camera, float posX, float posY, float posZ);
 
-void EUTS_Mesh_finalize(EUTS_Mesh *mesh);
+void EUTS_Camera_setRotation(EUTS_Camera *camera, float rotX, float rotY, float rotZ);
 
-void EUTS_Mesh_bind(EUTS_Mesh *mesh, EUTS_RenderState *renderState);
+void EUTS_Camera_update(EUTS_Camera *camera);

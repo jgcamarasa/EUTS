@@ -2,7 +2,8 @@
 // - Memory management: Create a custom heap? Track the memory in some way?
 
 #include "render.h"
-
+#include "mesh.h"
+#include "shader.h"
 
 int main()
 {
@@ -14,10 +15,14 @@ int main()
 	initD3D11(&window, &renderState);
 	
 	EUTS_Mesh mesh;
-
 	EUTS_Mesh_initialize(&mesh, &renderState);
-	EUTS_Mesh_bind(&mesh, &renderState);
-	EUTS_Mesh_finalize(&mesh);
+	
+	EUTS_Shader shader;
+	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/ColorVS.hlsl", L"../../../Resources/Shaders/ColorPS.hlsl");
+	
+	EUTS_Camera camera;
+	EUTS_Camera_setPosition(&camera, 0.0f, 0.0, -5.0f);
+	EUTS_Camera_setRotation(&camera, 0.0f, 0.0f, 0.0f);
 
 	// Loop
 	MSG msg;
@@ -46,11 +51,21 @@ int main()
 		else
 		{
 			// Otherwise do the frame processing.
-			render(&renderState);
+			beginScene(&renderState);
+			EUTS_Camera_update(&camera);
+
+			EUTS_Mesh_bind(&mesh, &renderState);
+			EUTS_Shader_bind(&shader, &renderState);
+			EUTS_Shader_setParameters(&shader, &renderState, &(renderState.worldMatrix), &(camera.viewMatrix), &(renderState.projectionMatrix));
+
+			renderState.deviceContext->DrawIndexed(mesh.indexCount, 0, 0);
+			endScene(&renderState);
 		}
 
 	}
 
+	EUTS_Mesh_finalize(&mesh);
+	EUTS_Shader_finalize(&shader);
 	finalizeD3D11(&renderState);
 
 	return 0;

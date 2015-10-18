@@ -1,28 +1,48 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Resource Files">
+    <Filter Include="EUTS">
+      <UniqueIdentifier>{c21bd255-07aa-4705-900f-3d66bc6b4fcb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Render">
+    <Filter Include="Graphics">
       <UniqueIdentifier>{85f6aa61-64e3-455b-b22d-7540a273d7d8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="EUTS">
-      <UniqueIdentifier>{c21bd255-07aa-4705-900f-3d66bc6b4fcb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\render.cpp">
-      <Filter>Render</Filter>
+      <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\main.cpp">
       <Filter>EUTS</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\mesh.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\shader.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\render.h">
-      <Filter>Render</Filter>
+      <Filter>Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\mesh.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\shader.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\..\..\Resources\Shaders\ColorVS.hlsl">
+      <Filter>Resources</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\..\Resources\Shaders\ColorPS.hlsl">
+      <Filter>Resources</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
