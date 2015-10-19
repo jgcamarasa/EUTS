@@ -1,6 +1,8 @@
 /* TODOS */
 // - Memory management: Create a custom heap? Track the memory in some way?
 // - Model matrix will belong to an entity, not global to render state
+// - Some shader checking (i.e, not being able to set parameters of one shader type to a shader of another type)
+// - Separate shader loading and creation from input layout initialization.
 
 #include "render.h"
 #include "mesh.h"
@@ -57,7 +59,7 @@ int main()
 
 			EUTS_Mesh_bind(&mesh, &renderState);
 			EUTS_Shader_bind(&shader, &renderState);
-			EUTS_Shader_setParameters(&shader, &renderState, &(renderState.modelMatrix), &(camera.viewMatrix), &(renderState.projectionMatrix));
+			EUTS_Shader_Color_setParameters(&shader, &renderState, &(renderState.modelMatrix), &(camera.viewMatrix), &(renderState.projectionMatrix));
 
 			renderState.deviceContext->DrawIndexed(mesh.indexCount, 0, 0);
 			endScene(&renderState);

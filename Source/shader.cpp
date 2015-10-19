@@ -118,7 +118,7 @@ void EUTS_Shader_finalize(EUTS_Shader *shader)
 	shader->vertexShader->Release();
 }
 
-void EUTS_Shader_setParameters(EUTS_Shader *shader, EUTS_RenderState *renderState, XMMATRIX *modelMatrix, XMMATRIX *viewMatrix, XMMATRIX *projectionMatrix)
+void EUTS_Shader_Color_setParameters(EUTS_Shader *shader, EUTS_RenderState *renderState, XMMATRIX *modelMatrix, XMMATRIX *viewMatrix, XMMATRIX *projectionMatrix)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
