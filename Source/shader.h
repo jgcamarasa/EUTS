@@ -1,6 +1,12 @@
 #pragma once
 #include "render.h"
 
+enum EUTS_ShaderType
+{
+	SHADER_COLOR,
+	SHADER_COLORTEX
+};
+
 struct EUTS_Shader
 {
 	ID3D11VertexShader* vertexShader;
@@ -9,14 +15,14 @@ struct EUTS_Shader
 	ID3D11Buffer* constantBuffer;
 };
 
-struct EUTS_VSConstantBuffer
+struct EUTS_VSMatrixConstantBuffer
 {
 	XMMATRIX model;
 	XMMATRIX view;
 	XMMATRIX projection;
 };
 
-void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, WCHAR *vsFilename, WCHAR *psFilename);
+void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, WCHAR *vsFilename, WCHAR *psFilename, uint32_t constantBufferSize);
 
 void outputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename);
 

@@ -1,8 +1,8 @@
 /* TODOS */
-// - Memory management: Create a custom heap? Track the memory in some way?
-// - Model matrix will belong to an entity, not global to render state
-// - Some shader checking (i.e, not being able to set parameters of one shader type to a shader of another type)
 // - Separate shader loading and creation from input layout initialization.
+// - Some shader checking (i.e, not being able to set parameters of one shader type to a shader of another type)
+// - Model matrix will belong to an entity, not global to render state
+// - Memory management: Create a custom heap? Track the memory in some way?
 
 #include "render.h"
 #include "mesh.h"
@@ -21,7 +21,7 @@ int main()
 	EUTS_Mesh_initialize(&mesh, &renderState);
 	
 	EUTS_Shader shader;
-	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/ColorVS.hlsl", L"../../../Resources/Shaders/ColorPS.hlsl");
+	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/ColorVS.hlsl", L"../../../Resources/Shaders/ColorPS.hlsl", sizeof(EUTS_VSMatrixConstantBuffer));
 	
 	EUTS_Camera camera;
 	EUTS_Camera_setPosition(&camera, 0.0f, 0.0, -5.0f);

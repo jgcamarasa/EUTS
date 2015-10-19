@@ -1,7 +1,8 @@
 #include "shader.h"
 #include <stdio.h>
 
-void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, WCHAR *vsFilename, WCHAR *psFilename)
+
+void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, WCHAR *vsFilename, WCHAR *psFilename, uint32_t constantBufferSize)
 {
 	HRESULT result;
 	ID3DBlob *errorMessage;
@@ -78,7 +79,7 @@ void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, 
 	pixelShaderBuffer->Release();
 
 	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	constantBufferDesc.ByteWidth = sizeof(EUTS_VSConstantBuffer);
+	constantBufferDesc.ByteWidth = constantBufferSize;
 	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	constantBufferDesc.MiscFlags = 0;
@@ -122,7 +123,7 @@ void EUTS_Shader_Color_setParameters(EUTS_Shader *shader, EUTS_RenderState *rend
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	EUTS_VSConstantBuffer *dataPtr;
+	EUTS_VSMatrixConstantBuffer *dataPtr;
 	unsigned int bufferNumber;
 	XMMATRIX model, view, projection;
 
@@ -134,7 +135,7 @@ void EUTS_Shader_Color_setParameters(EUTS_Shader *shader, EUTS_RenderState *rend
 	result = renderState->deviceContext->Map(shader->constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	assert(!FAILED(result));
 
-	dataPtr = (EUTS_VSConstantBuffer*)mappedResource.pData;
+	dataPtr = (EUTS_VSMatrixConstantBuffer*)mappedResource.pData;
 	dataPtr->model = model;
 	dataPtr->view = view;
 	dataPtr->projection = projection;
