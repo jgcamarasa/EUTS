@@ -42,7 +42,7 @@ struct EUTS_RenderState
 	ID3D11DepthStencilView	*depthStencilView;
 	ID3D11RasterizerState	*rasterState;
 	XMMATRIX				projectionMatrix;
-	XMMATRIX				worldMatrix;
+	XMMATRIX				modelMatrix;
 	EUTS_Window				*window; // This struct DOESN'T have the ownership of this
 	float					videoMemoryInMB;
 	char					videoCardDescription[128];

@@ -11,7 +11,7 @@ struct EUTS_Shader
 
 struct EUTS_VSConstantBuffer
 {
-	XMMATRIX world;
+	XMMATRIX model;
 	XMMATRIX view;
 	XMMATRIX projection;
 };
@@ -22,6 +22,6 @@ void outputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shader
 
 void EUTS_Shader_finalize(EUTS_Shader *shader);
 
-void EUTS_Shader_setParameters(EUTS_Shader *shader, EUTS_RenderState *renderState, XMMATRIX *worldMatrix, XMMATRIX *viewMatrix, XMMATRIX *projectionMatrix);
+void EUTS_Shader_setParameters(EUTS_Shader *shader, EUTS_RenderState *renderState, XMMATRIX *modelMatrix, XMMATRIX *viewMatrix, XMMATRIX *projectionMatrix);
 
 void EUTS_Shader_bind(EUTS_Shader *shader, EUTS_RenderState *renderState);

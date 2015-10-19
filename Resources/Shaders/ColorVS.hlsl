@@ -1,6 +1,6 @@
 cbuffer MatrixBuffer
 {
-	matrix worldMatrix;
+	matrix modelMatrix;
 	matrix viewMatrix;
 	matrix projectionMatrix;
 };
@@ -22,7 +22,7 @@ PixelInput main(VertexInput input)
 	PixelInput output;
 	input.position.w = 1.0f; // Because we read only xyz from vertex data
 	
-	output.position = mul(input.position, worldMatrix);
+	output.position = mul(input.position, modelMatrix);
 	output.position = mul(output.position, viewMatrix);
 	output.position = mul(output.position, projectionMatrix);
 

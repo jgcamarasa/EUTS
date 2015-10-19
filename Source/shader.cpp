@@ -118,16 +118,16 @@ void EUTS_Shader_finalize(EUTS_Shader *shader)
 	shader->vertexShader->Release();
 }
 
-void EUTS_Shader_setParameters(EUTS_Shader *shader, EUTS_RenderState *renderState, XMMATRIX *worldMatrix, XMMATRIX *viewMatrix, XMMATRIX *projectionMatrix)
+void EUTS_Shader_setParameters(EUTS_Shader *shader, EUTS_RenderState *renderState, XMMATRIX *modelMatrix, XMMATRIX *viewMatrix, XMMATRIX *projectionMatrix)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	EUTS_VSConstantBuffer *dataPtr;
 	unsigned int bufferNumber;
-	XMMATRIX world, view, projection;
+	XMMATRIX model, view, projection;
 
 	// It's a requirement to transpose the matrices before passing them to the shader
-	world = XMMatrixTranspose(*worldMatrix);
+	model = XMMatrixTranspose(*modelMatrix);
 	view = XMMatrixTranspose(*viewMatrix);
 	projection = XMMatrixTranspose(*projectionMatrix);
 
@@ -135,7 +135,7 @@ void EUTS_Shader_setParameters(EUTS_Shader *shader, EUTS_RenderState *renderStat
 	assert(!FAILED(result));
 
 	dataPtr = (EUTS_VSConstantBuffer*)mappedResource.pData;
-	dataPtr->world = world;
+	dataPtr->model = model;
 	dataPtr->view = view;
 	dataPtr->projection = projection;
 

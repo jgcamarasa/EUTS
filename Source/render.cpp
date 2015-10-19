@@ -309,7 +309,7 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 	fieldOfView = 3.141592654f / 4.0f;
 	screenAspect = window->width / (float)(window->height);
 	renderState->projectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, SCREEN_NEAR, SCREEN_DEPTH);
-	renderState->worldMatrix = XMMatrixIdentity();
+	renderState->modelMatrix = XMMatrixIdentity();
 	
 	renderState->window = window;
 }
