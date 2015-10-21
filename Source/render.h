@@ -52,9 +52,13 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState);
 
 void finalizeD3D11(EUTS_RenderState *renderState);
 
-void beginScene(EUTS_RenderState *renderState);
+void EUTS_Render_beginFrame(EUTS_RenderState *renderState);
 
-void endScene(EUTS_RenderState *renderState);
+void EUTS_Render_endFrame(EUTS_RenderState *renderState);
+
+void EUTS_Render_setTexture(EUTS_RenderState *renderState, ID3D11ShaderResourceView* texture); // Todo: More textures?
+
+
 
 
 struct EUTS_Camera

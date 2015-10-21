@@ -327,7 +327,7 @@ void finalizeD3D11(EUTS_RenderState *renderState)
 	renderState->swapChain->Release();
 }
 
-void beginScene(EUTS_RenderState *renderState)
+void EUTS_Render_beginFrame(EUTS_RenderState *renderState)
 {
 	float color[4] = { 0.5f, 0.8f, 1.0f, 1.0f };
 
@@ -336,7 +336,7 @@ void beginScene(EUTS_RenderState *renderState)
 	renderState->deviceContext->ClearDepthStencilView(renderState->depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }
 
-void endScene(EUTS_RenderState *renderState)
+void EUTS_Render_endFrame(EUTS_RenderState *renderState)
 {
 	if (VSYNC)
 	{
@@ -348,6 +348,10 @@ void endScene(EUTS_RenderState *renderState)
 	}
 }
 
+void EUTS_Render_setTexture(EUTS_RenderState *renderState, ID3D11ShaderResourceView* texture)
+{
+	renderState->deviceContext->PSSetShaderResources(0, 1, &texture);
+}
 
 void EUTS_Camera_setPosition(EUTS_Camera *camera, float posX, float posY, float posZ)
 {

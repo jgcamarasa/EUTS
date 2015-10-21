@@ -7,6 +7,7 @@
 #include "render.h"
 #include "mesh.h"
 #include "shader.h"
+#include "texture.h"
 
 int main()
 {
@@ -21,11 +22,15 @@ int main()
 	EUTS_Mesh_initialize(&mesh, &renderState);
 	
 	EUTS_Shader shader;
-	EUTS_Shader_Color_initialize(&shader, &renderState, L"../../../Resources/Shaders/ColorVS.hlsl", L"../../../Resources/Shaders/ColorPS.hlsl");
+	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/TextureVS.hlsl", L"../../../Resources/Shaders/TexturePS.hlsl", SHADER_FLAG_NONE);
+	EUTS_Texture texture;
+	EUTS_Texture_load(&texture, &renderState, "../../../Resources/Textures/awesome.png");
 	
 	EUTS_Camera camera;
 	EUTS_Camera_setPosition(&camera, 0.0f, 0.0, -5.0f);
 	EUTS_Camera_setRotation(&camera, 0.0f, 0.0f, 0.0f);
+
+	
 
 	// Loop
 	MSG msg;
@@ -54,19 +59,21 @@ int main()
 		else
 		{
 			// Otherwise do the frame processing.
-			beginScene(&renderState);
+			EUTS_Render_beginFrame(&renderState);
 			EUTS_Camera_update(&camera);
 
 			EUTS_Mesh_bind(&mesh, &renderState);
 			EUTS_Shader_bind(&shader, &renderState);
-			EUTS_Shader_Color_setParameters(&shader, &renderState, &(renderState.modelMatrix), &(camera.viewMatrix), &(renderState.projectionMatrix));
+			EUTS_Shader_setMatrices(&shader, &renderState, &(renderState.modelMatrix), &(camera.viewMatrix), &(renderState.projectionMatrix));
+			EUTS_Render_setTexture(&renderState, texture.textureView);
 
 			renderState.deviceContext->DrawIndexed(mesh.indexCount, 0, 0);
-			endScene(&renderState);
+			EUTS_Render_endFrame(&renderState);
 		}
 
 	}
 
+	EUTS_Texture_delete(&texture);
 	EUTS_Mesh_finalize(&mesh);
 	EUTS_Shader_finalize(&shader);
 	finalizeD3D11(&renderState);

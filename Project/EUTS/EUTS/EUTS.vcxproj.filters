@@ -11,6 +11,9 @@
     <Filter Include="Graphics">
       <UniqueIdentifier>{85f6aa61-64e3-455b-b22d-7540a273d7d8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{6b09edfa-e319-4724-8103-09082a2ce290}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\render.cpp">
@@ -25,6 +28,9 @@
     <ClCompile Include="..\..\..\Source\shader.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\texture.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\render.h">
@@ -36,12 +42,27 @@
     <ClInclude Include="..\..\..\Source\shader.h">
       <Filter>Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\texture.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\stb_image.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\stack_allocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\..\..\Resources\Shaders\ColorVS.hlsl">
       <Filter>Resources</Filter>
     </FxCompile>
     <FxCompile Include="..\..\..\Resources\Shaders\ColorPS.hlsl">
+      <Filter>Resources</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\..\Resources\Shaders\TexturePS.hlsl">
+      <Filter>Resources</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\..\Resources\Shaders\TextureVS.hlsl">
       <Filter>Resources</Filter>
     </FxCompile>
   </ItemGroup>
