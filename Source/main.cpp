@@ -22,7 +22,7 @@ int main()
 	EUTS_Mesh_initialize(&mesh, &renderState);
 	
 	EUTS_Shader shader;
-	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/TextureVS.hlsl", L"../../../Resources/Shaders/TexturePS.hlsl", SHADER_FLAG_NONE);
+	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/TextureVS.hlsl", L"../../../Resources/Shaders/TexturePS.hlsl", SHADER_FLAG_TEXTURE);
 	EUTS_Texture texture;
 	EUTS_Texture_load(&texture, &renderState, "../../../Resources/Textures/awesome.png");
 	

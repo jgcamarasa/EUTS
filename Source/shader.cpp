@@ -41,6 +41,10 @@ void EUTS_Shader_bind(EUTS_Shader *shader, EUTS_RenderState *renderState)
 	renderState->deviceContext->IASetInputLayout(shader->layout);
 	renderState->deviceContext->VSSetShader(shader->vertexShader, NULL, 0);
 	renderState->deviceContext->PSSetShader(shader->pixelShader, NULL, 0);
+	if (shader->flags & SHADER_FLAG_TEXTURE)
+	{
+		renderState->deviceContext->PSSetSamplers(0, 1, &(shader->samplerState));
+	}
 }
 
 void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, WCHAR *vsFilename, WCHAR *psFilename, int flags)
