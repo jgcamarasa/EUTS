@@ -21,7 +21,7 @@ int main()
 	EUTS_Mesh_initialize(&mesh, &renderState);
 	
 	EUTS_Shader shader;
-	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/ColorVS.hlsl", L"../../../Resources/Shaders/ColorPS.hlsl", sizeof(EUTS_VSMatrixConstantBuffer));
+	EUTS_Shader_Color_initialize(&shader, &renderState, L"../../../Resources/Shaders/ColorVS.hlsl", L"../../../Resources/Shaders/ColorPS.hlsl");
 	
 	EUTS_Camera camera;
 	EUTS_Camera_setPosition(&camera, 0.0f, 0.0, -5.0f);
