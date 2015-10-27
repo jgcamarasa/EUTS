@@ -3,6 +3,14 @@
 #include <assimp/postprocess.h>     // Post processing flags
 #include <stdio.h>
 
+/* TODO 
+- Interleave the data. For each vertex:
+	- vertPos
+	- vertUV
+	- vertColor
+- Commandline arguments
+
+*/
 // Format:
 // 'E','U','T','S'
 // 'M','E','S','H'
@@ -12,6 +20,7 @@
 // vertColor	: float[4][numVerts]
 // numFaces		: unsigned int
 // indices		: unsigned int[3][numFaces]
+
 
 char EUTS_ID[4] = { 'E', 'U', 'T', 'S' };
 char MESH_ID[4] = { 'M', 'E', 'S', 'H' };
