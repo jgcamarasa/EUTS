@@ -8,3 +8,6 @@ Project/EUTS/EUTS/Debug/EUTS.log
 *.sdf
 Project/EUTS/EUTS.opensdf
 Project/EUTS/EUTS/EUTS.vcxproj.user
+*.idb
+*.log
+*.ilk
