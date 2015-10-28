@@ -1,42 +1,82 @@
 #include "mesh.h"
+#include <stdio.h>
+
 struct EUTS_Vertex
 {
 	XMFLOAT3 position;
-	XMFLOAT4 color;
 	XMFLOAT2 texCoord;
+	XMFLOAT4 color;
 };
 
-// intialize a mesh to a triangle...
-void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_RenderState *renderState)
+struct EUTS_MeshDescriptor // Mesh on RAM
 {
+	unsigned int vertexCount;
 	EUTS_Vertex *vertices;
-	unsigned long *indices;
+	unsigned int indexCount; //faces * 3
+	unsigned int *indices;
+};
+
+
+void EUTS_MeshDescriptor_load(EUTS_MeshDescriptor *meshDescriptor, const char *fileName)
+{
+	FILE *file = fopen(fileName, "rb");
+
+	char id[4];
+	size_t bytesRead;
+	bytesRead = fread(id, sizeof(char), 4, file);
+	assert(bytesRead == 4);
+	assert(id[0] == 'E');
+	assert(id[1] == 'U');
+	assert(id[2] == 'T');
+	assert(id[3] == 'S');
+
+	bytesRead = fread(id, sizeof(char), 4, file);
+	assert(bytesRead == 4);
+	assert(id[0] == 'M');
+	assert(id[1] == 'E');
+	assert(id[2] == 'S');
+	assert(id[3] == 'H');
+
+	unsigned int numVerts;
+	bytesRead = fread(&numVerts, sizeof(unsigned int), 1, file);
+	meshDescriptor->vertexCount = numVerts;
+	meshDescriptor->vertices = (EUTS_Vertex*) malloc(sizeof(EUTS_Vertex)*numVerts);
+	bytesRead = fread(meshDescriptor->vertices, 1, numVerts*sizeof(EUTS_Vertex), file);
+	assert(bytesRead == sizeof(EUTS_Vertex)*numVerts);
+
+	unsigned int numIndices;
+	bytesRead = fread(&numIndices, sizeof(unsigned int), 1, file);
+	meshDescriptor->indexCount = numIndices;
+	meshDescriptor->indices = (unsigned int*)malloc(sizeof(unsigned int)*numIndices);
+	bytesRead = fread(meshDescriptor->indices, 1, numIndices*sizeof(unsigned int), file);
+	assert(bytesRead == sizeof(unsigned int)*numIndices);
+
+	fclose(file);
+
+	for (int i = 0; i < numVerts; i++)
+	{
+		EUTS_Vertex vertex = meshDescriptor->vertices[i];
+	}
+}
+
+void EUTS_MeshDescriptor_finalize(EUTS_MeshDescriptor *meshDescriptor)
+{
+	free(meshDescriptor->vertices);
+	free(meshDescriptor->indices);
+}
+
+// intialize a mesh to a triangle...
+void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_RenderState *renderState, const char *fileName)
+{
+	EUTS_MeshDescriptor descriptor;
+	EUTS_MeshDescriptor_load(&descriptor, fileName);
+
 	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 	HRESULT result;
 
-	mesh->vertexCount = 3;
-	mesh->indexCount = 3;
-	vertices = new EUTS_Vertex[mesh->vertexCount];
-	indices = new unsigned long[mesh->indexCount];
-
-	// Load the vertex array with data.
-	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
-	vertices[0].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	vertices[0].texCoord = XMFLOAT2(0.0f, 1.0f);
-
-	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
-	vertices[1].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
-	vertices[1].texCoord = XMFLOAT2(0.5f, 0.0f);
-
-	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
-	vertices[2].color = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
-	vertices[2].texCoord = XMFLOAT2(1.0f, 1.0f);
-
-	// Load the index array with data.
-	indices[0] = 0;  // Bottom left.
-	indices[1] = 1;  // Top middle.
-	indices[2] = 2;  // Bottom right.
+	mesh->vertexCount = descriptor.vertexCount;
+	mesh->indexCount = descriptor.indexCount;
 
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	vertexBufferDesc.ByteWidth = sizeof(EUTS_Vertex)*mesh->vertexCount;
@@ -45,7 +85,7 @@ void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_RenderState *renderState)
 	vertexBufferDesc.MiscFlags = 0;
 	vertexBufferDesc.StructureByteStride = 0;
 
-	vertexData.pSysMem = vertices;
+	vertexData.pSysMem = descriptor.vertices;
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
@@ -59,15 +99,16 @@ void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_RenderState *renderState)
 	indexBufferDesc.MiscFlags = 0;
 	indexBufferDesc.StructureByteStride = 0;
 
-	indexData.pSysMem = indices;
+	indexData.pSysMem = descriptor.indices;
 	indexData.SysMemPitch = 0;
 	indexData.SysMemSlicePitch = 0;
 
 	result = renderState->device->CreateBuffer(&indexBufferDesc, &indexData, &(mesh->indexBuffer));
 	assert(!FAILED(result));
 
-	delete[] vertices;
-	delete[] indices;
+	EUTS_MeshDescriptor_finalize(&descriptor);
+
+	
 }
 
 void EUTS_Mesh_finalize(EUTS_Mesh *mesh)

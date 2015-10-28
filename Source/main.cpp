@@ -19,7 +19,7 @@ int main()
 	initD3D11(&window, &renderState);
 	
 	EUTS_Mesh mesh;
-	EUTS_Mesh_initialize(&mesh, &renderState);
+	EUTS_Mesh_initialize(&mesh, &renderState, "../../../Resources/Meshes/cube.mesh");
 	
 	EUTS_Shader shader;
 	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/TextureVS.hlsl", L"../../../Resources/Shaders/TexturePS.hlsl", SHADER_FLAG_TEXTURE);

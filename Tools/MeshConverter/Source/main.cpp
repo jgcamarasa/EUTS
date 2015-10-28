@@ -4,10 +4,6 @@
 #include <stdio.h>
 
 /* TODO 
-- Interleave the data. For each vertex:
-	- vertPos
-	- vertUV
-	- vertColor
 - Commandline arguments
 
 */
@@ -15,15 +11,18 @@
 // 'E','U','T','S'
 // 'M','E','S','H'
 // numVerts		: unsigned int 
-// vertPos		: float[3][numVerts]
-// vertUV		: float[2][numVerts]
-// vertColor	: float[4][numVerts]
-// numFaces		: unsigned int
-// indices		: unsigned int[3][numFaces]
+// for each vertex:
+//	vertPos		: float[3]
+//	vertUV		: float[2]
+//	vertColor	: float[4]
+// numIndices		: unsigned int
+// indices		: unsigned int[numIndices] // faces * 3
 
 
 char EUTS_ID[4] = { 'E', 'U', 'T', 'S' };
 char MESH_ID[4] = { 'M', 'E', 'S', 'H' };
+
+bool gWriteDebug = true;
 
 void vector3D2Array(float* arr, aiVector3D vec)
 {
@@ -44,39 +43,42 @@ int main()
 {
 	Assimp::Importer importer;
 
-	const aiScene* scene = importer.ReadFile("cube.dae", aiProcess_MakeLeftHanded | aiProcess_FlipUVs);
+	const aiScene* scene = importer.ReadFile("cube.dae",	aiProcess_ConvertToLeftHanded | 
+															aiProcess_JoinIdenticalVertices | 
+															aiProcess_Triangulate |
+															aiProcess_GenNormals );
 
 	FILE* outputFile;
 	fopen_s(&outputFile, "output.mesh", "wb");
 	
 	fwrite(EUTS_ID, sizeof(char), sizeof(EUTS_ID), outputFile);
 	fwrite(MESH_ID, sizeof(char), sizeof(MESH_ID), outputFile);
+	printf("EUTS\n");
+	printf("MESH\n");
 
 	aiMesh *mesh = scene->mMeshes[0];
 
 	// num vertex
 	unsigned int numVerts = mesh->mNumVertices;
 	fwrite(&numVerts, sizeof(unsigned int), 1, outputFile);
-
-	// vertex positions (x, y, z)
+	printf("%u\n", numVerts);
+	
+	
 	for (unsigned int i = 0; i < numVerts; ++i)
 	{
+		// vertex positions (x, y, z)
 		float vertex[3];
 		vector3D2Array(vertex, mesh->mVertices[i]);
 		fwrite(vertex, sizeof(vertex), 1, outputFile);
-	}
+		printf("%f %f %f\n", vertex[0], vertex[1], vertex[2]);
 
-	// texture coordinates (u, v)
-	for (unsigned int i = 0; i < numVerts; ++i)
-	{
+		// texture coordinates (u, v)
 		float coord[3];
 		vector3D2Array(coord, mesh->mTextureCoords[0][i]);
-		fwrite(coord, sizeof(float)*2, 1, outputFile);
-	}
+		fwrite(coord, sizeof(float) * 2, 1, outputFile);
+		printf("%f %f\n", vertex[0], vertex[1]);
 
-	// vertex color (r, g, b, a)
-	for (unsigned int i = 0; i < numVerts; ++i)
-	{
+		// vertex color (r, g, b, a)
 		float color[4];
 		if (mesh->HasVertexColors(0))
 		{
@@ -89,13 +91,16 @@ int main()
 			color[2] = 1.0f;
 			color[3] = 1.0f;
 		}
-		
+
 		fwrite(color, sizeof(color), 1, outputFile);
+		printf("%f %f %f %f\n", color[0], color[1], color[2], color[3]);
 	}
 
 	// Num faces
 	unsigned int numFaces = mesh->mNumFaces;
-	fwrite(&numFaces, sizeof(unsigned int), 1, outputFile);
+	unsigned int numIndices = numFaces * 3;
+	fwrite(&numIndices, sizeof(unsigned int), 1, outputFile);
+	printf("%u\n", numIndices);
 	for (unsigned int i = 0; i < numFaces; ++i)
 	{
 		aiFace face = mesh->mFaces[i];
@@ -103,10 +108,12 @@ int main()
 		for (unsigned int j = 0; j < face.mNumIndices; j++)
 		{
 			fwrite(&(face.mIndices[j]), sizeof(unsigned int), 1, outputFile);
+			printf("%u ", face.mIndices[j]);
 		}
+		printf("\n");
 	}
 	
-
+	
 	fclose(outputFile);
 
 	return 0;
