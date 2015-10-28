@@ -6,7 +6,7 @@ int main()
 {
 	Assimp::Importer importer;
 
-	const aiScene* scene = importer.ReadFile("cube.dae", 0);
+	const aiScene* scene = importer.ReadFile("cube.dae", aiProcess_MakeLeftHanded | aiProcess_FlipUVs);
 
 	return 0;
 }
