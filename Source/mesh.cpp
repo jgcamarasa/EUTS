@@ -1,20 +1,6 @@
 #include "mesh.h"
 #include <stdio.h>
 
-struct EUTS_Vertex
-{
-	XMFLOAT3 position;
-	XMFLOAT2 texCoord;
-	XMFLOAT4 color;
-};
-
-struct EUTS_MeshDescriptor // Mesh on RAM
-{
-	unsigned int vertexCount;
-	EUTS_Vertex *vertices;
-	unsigned int indexCount; //faces * 3
-	unsigned int *indices;
-};
 
 
 void EUTS_MeshDescriptor_load(EUTS_MeshDescriptor *meshDescriptor, const char *fileName)
@@ -52,11 +38,6 @@ void EUTS_MeshDescriptor_load(EUTS_MeshDescriptor *meshDescriptor, const char *f
 	assert(bytesRead == sizeof(unsigned int)*numIndices);
 
 	fclose(file);
-
-	for (int i = 0; i < numVerts; i++)
-	{
-		EUTS_Vertex vertex = meshDescriptor->vertices[i];
-	}
 }
 
 void EUTS_MeshDescriptor_finalize(EUTS_MeshDescriptor *meshDescriptor)
@@ -66,17 +47,14 @@ void EUTS_MeshDescriptor_finalize(EUTS_MeshDescriptor *meshDescriptor)
 }
 
 // intialize a mesh to a triangle...
-void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_RenderState *renderState, const char *fileName)
+void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_RenderState *renderState, EUTS_MeshDescriptor *descriptor)
 {
-	EUTS_MeshDescriptor descriptor;
-	EUTS_MeshDescriptor_load(&descriptor, fileName);
-
 	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 	HRESULT result;
 
-	mesh->vertexCount = descriptor.vertexCount;
-	mesh->indexCount = descriptor.indexCount;
+	mesh->vertexCount = descriptor->vertexCount;
+	mesh->indexCount = descriptor->indexCount;
 
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	vertexBufferDesc.ByteWidth = sizeof(EUTS_Vertex)*mesh->vertexCount;
@@ -85,7 +63,7 @@ void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_RenderState *renderState, const 
 	vertexBufferDesc.MiscFlags = 0;
 	vertexBufferDesc.StructureByteStride = 0;
 
-	vertexData.pSysMem = descriptor.vertices;
+	vertexData.pSysMem = descriptor->vertices;
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
@@ -99,16 +77,20 @@ void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_RenderState *renderState, const 
 	indexBufferDesc.MiscFlags = 0;
 	indexBufferDesc.StructureByteStride = 0;
 
-	indexData.pSysMem = descriptor.indices;
+	indexData.pSysMem = descriptor->indices;
 	indexData.SysMemPitch = 0;
 	indexData.SysMemSlicePitch = 0;
 
 	result = renderState->device->CreateBuffer(&indexBufferDesc, &indexData, &(mesh->indexBuffer));
 	assert(!FAILED(result));
+}
 
+void EUTS_Mesh_load(EUTS_Mesh *mesh, EUTS_RenderState *renderState, const char *fileName)
+{
+	EUTS_MeshDescriptor descriptor;
+	EUTS_MeshDescriptor_load(&descriptor, fileName);
+	EUTS_Mesh_initialize(mesh, renderState, &descriptor);
 	EUTS_MeshDescriptor_finalize(&descriptor);
-
-	
 }
 
 void EUTS_Mesh_finalize(EUTS_Mesh *mesh)

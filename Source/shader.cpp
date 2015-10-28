@@ -110,9 +110,9 @@ void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, 
 	layout[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 	layout[0].InstanceDataStepRate = 0;
 
-	layout[1].SemanticName = "COLOR";
+	layout[1].SemanticName = "NORMAL";
 	layout[1].SemanticIndex = 0;
-	layout[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT; // float4
+	layout[1].Format = DXGI_FORMAT_R32G32B32_FLOAT; // float3
 	layout[1].InputSlot = 0;
 	layout[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 	layout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;

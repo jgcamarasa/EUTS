@@ -1,6 +1,7 @@
 #include <assimp/Importer.hpp>      // C++ importer interface
 #include <assimp/scene.h>           // Output data structure
 #include <assimp/postprocess.h>     // Post processing flags
+#include "../../../Source/mesh.h"
 #include <stdio.h>
 
 /* TODO 
@@ -11,11 +12,8 @@
 // 'E','U','T','S'
 // 'M','E','S','H'
 // numVerts		: unsigned int 
-// for each vertex:
-//	vertPos		: float[3]
-//	vertUV		: float[2]
-//	vertColor	: float[4]
-// numIndices		: unsigned int
+// vertices		: EUTS_Vertex[numVerts]
+// numIndices	: unsigned int
 // indices		: unsigned int[numIndices] // faces * 3
 
 
@@ -24,20 +22,6 @@ char MESH_ID[4] = { 'M', 'E', 'S', 'H' };
 
 bool gWriteDebug = true;
 
-void vector3D2Array(float* arr, aiVector3D vec)
-{
-	arr[0] = vec.x;
-	arr[1] = vec.y;
-	arr[2] = vec.z;
-}
-
-void color4D2Array(float* arr, aiColor4D col)
-{
-	arr[0] = col.r;
-	arr[1] = col.g;
-	arr[2] = col.b;
-	arr[2] = col.a;
-}
 
 int main()
 {
@@ -49,7 +33,7 @@ int main()
 															aiProcess_GenNormals );
 
 	FILE* outputFile;
-	fopen_s(&outputFile, "output.mesh", "wb");
+	fopen_s(&outputFile, "../../../../Resources/Meshes/cube.mesh", "wb");
 	
 	fwrite(EUTS_ID, sizeof(char), sizeof(EUTS_ID), outputFile);
 	fwrite(MESH_ID, sizeof(char), sizeof(MESH_ID), outputFile);
@@ -66,35 +50,23 @@ int main()
 	
 	for (unsigned int i = 0; i < numVerts; ++i)
 	{
-		// vertex positions (x, y, z)
-		float vertex[3];
-		vector3D2Array(vertex, mesh->mVertices[i]);
-		fwrite(vertex, sizeof(vertex), 1, outputFile);
-		printf("%f %f %f\n", vertex[0], vertex[1], vertex[2]);
+		EUTS_Vertex vertex;
+		
+		vertex.position.x = mesh->mVertices[i].x;
+		vertex.position.y = mesh->mVertices[i].y;
+		vertex.position.z = mesh->mVertices[i].z;
 
-		// texture coordinates (u, v)
-		float coord[3];
-		vector3D2Array(coord, mesh->mTextureCoords[0][i]);
-		fwrite(coord, sizeof(float) * 2, 1, outputFile);
-		printf("%f %f\n", vertex[0], vertex[1]);
+		vertex.normal.x = mesh->mNormals[i].x;
+		vertex.normal.y = mesh->mNormals[i].y;
+		vertex.normal.z = mesh->mNormals[i].z;
+		
+		vertex.texCoord.x = mesh->mTextureCoords[0][i].x;
+		vertex.texCoord.y = mesh->mTextureCoords[0][i].y;
 
-		// vertex color (r, g, b, a)
-		float color[4];
-		if (mesh->HasVertexColors(0))
-		{
-			color4D2Array(color, mesh->mColors[0][i]);
-		}
-		else
-		{
-			color[0] = 1.0f;
-			color[1] = 1.0f;
-			color[2] = 1.0f;
-			color[3] = 1.0f;
-		}
-
-		fwrite(color, sizeof(color), 1, outputFile);
-		printf("%f %f %f %f\n", color[0], color[1], color[2], color[3]);
+		fwrite(&vertex, 1, sizeof(vertex), outputFile);
 	}
+
+	
 
 	// Num faces
 	unsigned int numFaces = mesh->mNumFaces;

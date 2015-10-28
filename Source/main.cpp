@@ -1,7 +1,9 @@
 /* TODOS */
-// - Separate shader loading and creation from input layout initialization.
-// - Some shader checking (i.e, not being able to set parameters of one shader type to a shader of another type)
+// - Shader management
+// - Mesh management
+// - Texture management
 // - Model matrix will belong to an entity, not global to render state
+// - Debug drawing (grid... axes...)
 // - Memory management: Create a custom heap? Track the memory in some way?
 
 #include "render.h"
@@ -19,7 +21,7 @@ int main()
 	initD3D11(&window, &renderState);
 	
 	EUTS_Mesh mesh;
-	EUTS_Mesh_initialize(&mesh, &renderState, "../../../Resources/Meshes/cube.mesh");
+	EUTS_Mesh_load(&mesh, &renderState, "../../../Resources/Meshes/cube.mesh");
 	
 	EUTS_Shader shader;
 	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/TextureVS.hlsl", L"../../../Resources/Shaders/TexturePS.hlsl", SHADER_FLAG_TEXTURE);
@@ -27,8 +29,8 @@ int main()
 	EUTS_Texture_load(&texture, &renderState, "../../../Resources/Textures/awesome.png");
 	
 	EUTS_Camera camera;
-	EUTS_Camera_setPosition(&camera, 0.0f, 0.0, -5.0f);
-	EUTS_Camera_setRotation(&camera, 0.0f, 0.0f, 0.0f);
+	EUTS_Camera_setPosition(&camera, 3.0f, 3.0, -5.0f);
+	EUTS_Camera_setRotation(&camera, 0.5f, -0.5f, 0.0f);
 
 	
 
