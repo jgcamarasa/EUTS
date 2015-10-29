@@ -32,3 +32,5 @@ void EUTS_Mesh_load(EUTS_Mesh *mesh, EUTS_RenderState *renderState, const char *
 void EUTS_Mesh_finalize(EUTS_Mesh *mesh);
 
 void EUTS_Mesh_bind(EUTS_Mesh *mesh, EUTS_RenderState *renderState);
+
+void EUTS_Mesh_bindLine(EUTS_Mesh *mesh, EUTS_RenderState *renderState);

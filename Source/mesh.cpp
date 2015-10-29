@@ -111,3 +111,16 @@ void EUTS_Mesh_bind(EUTS_Mesh *mesh, EUTS_RenderState *renderState)
 	renderState->deviceContext->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	renderState->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
+
+void EUTS_Mesh_bindLine(EUTS_Mesh *mesh, EUTS_RenderState *renderState)
+{
+	unsigned int stride;
+	unsigned int offset;
+
+	stride = sizeof(EUTS_Vertex);
+	offset = 0;
+
+	renderState->deviceContext->IASetVertexBuffers(0, 1, &(mesh->vertexBuffer), &stride, &offset);
+	renderState->deviceContext->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	renderState->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+}

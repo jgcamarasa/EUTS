@@ -10,6 +10,7 @@
 #include "mesh.h"
 #include "shader.h"
 #include "texture.h"
+#include "debug_render.h"
 
 int main()
 {
@@ -29,10 +30,10 @@ int main()
 	EUTS_Texture_load(&texture, &renderState, "../../../Resources/Textures/awesome.png");
 	
 	EUTS_Camera camera;
-	EUTS_Camera_setPosition(&camera, 3.0f, 3.0, -5.0f);
+	EUTS_Camera_setPosition(&camera, 6.0f, 6.0, -10.0f);
 	EUTS_Camera_setRotation(&camera, 0.5f, -0.5f, 0.0f);
 
-	
+	EUTS_DebugRender_initialize(&renderState);
 
 	// Loop
 	MSG msg;
@@ -70,11 +71,15 @@ int main()
 			EUTS_Render_setTexture(&renderState, texture.textureView);
 
 			renderState.deviceContext->DrawIndexed(mesh.indexCount, 0, 0);
+			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(6.0f, 0.0f, 0.0f), &renderState);
+			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 6.0f, 0.0f), &renderState);
+			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 6.0f), &renderState);
 			EUTS_Render_endFrame(&renderState);
 		}
 
 	}
 
+	EUTS_DebugRender_finalize();
 	EUTS_Texture_delete(&texture);
 	EUTS_Mesh_finalize(&mesh);
 	EUTS_Shader_finalize(&shader);

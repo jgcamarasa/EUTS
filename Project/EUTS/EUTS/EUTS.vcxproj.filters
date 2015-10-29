@@ -31,6 +31,9 @@
     <ClCompile Include="..\..\..\Source\texture.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\debug_render.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\render.h">
@@ -51,6 +54,9 @@
     <ClInclude Include="..\..\..\Source\stack_allocator.h">
       <Filter>Memory</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\debug_render.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\..\..\Resources\Shaders\ColorVS.hlsl">
@@ -63,6 +69,12 @@
       <Filter>Resources</Filter>
     </FxCompile>
     <FxCompile Include="..\..\..\Resources\Shaders\TextureVS.hlsl">
+      <Filter>Resources</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\..\Resources\Shaders\DebugLinePS.hlsl">
+      <Filter>Resources</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\..\Resources\Shaders\DebugLineVS.hlsl">
       <Filter>Resources</Filter>
     </FxCompile>
   </ItemGroup>
