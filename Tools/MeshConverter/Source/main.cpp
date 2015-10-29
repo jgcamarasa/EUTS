@@ -23,11 +23,11 @@ char MESH_ID[4] = { 'M', 'E', 'S', 'H' };
 bool gWriteDebug = true;
 
 
-int main()
+int main(int argc, char *argv[])
 {
 	Assimp::Importer importer;
 
-	const aiScene* scene = importer.ReadFile("cube.dae",	aiProcess_ConvertToLeftHanded | 
+	const aiScene* scene = importer.ReadFile("bird.dae",	aiProcess_ConvertToLeftHanded | 
 															aiProcess_JoinIdenticalVertices | 
 															aiProcess_Triangulate |
 															aiProcess_GenNormals );

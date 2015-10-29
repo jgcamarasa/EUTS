@@ -27,7 +27,7 @@ int main()
 	EUTS_Shader shader;
 	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/TextureVS.hlsl", L"../../../Resources/Shaders/TexturePS.hlsl", SHADER_FLAG_TEXTURE);
 	EUTS_Texture texture;
-	EUTS_Texture_load(&texture, &renderState, "../../../Resources/Textures/awesome.png");
+	EUTS_Texture_load(&texture, &renderState, "../../../Resources/Textures/bird.png");
 	
 	EUTS_Camera camera;
 	EUTS_Camera_setPosition(&camera, 6.0f, 6.0, -10.0f);
