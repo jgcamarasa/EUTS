@@ -1,0 +1,1 @@
+..\Tools\Bin\MeshConverter.exe "Meshes\bird.dae" "..\Resources\Meshes\bird.mesh"

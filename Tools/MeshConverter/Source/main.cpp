@@ -25,28 +25,55 @@ bool gWriteDebug = true;
 
 int main(int argc, char *argv[])
 {
+	if (argc != 3)
+	{
+		printf("MeshConvertex.exe inputFile outputFile\n");
+		return -1;
+	}
+
+	const char *input = argv[1];
+	const char *output = argv[2];
+
+	printf("Processing %s\n", input);
+
 	Assimp::Importer importer;
 
-	const aiScene* scene = importer.ReadFile("bird.dae",	aiProcess_ConvertToLeftHanded | 
+	const aiScene* scene = importer.ReadFile(input, aiProcess_ConvertToLeftHanded |
 															aiProcess_JoinIdenticalVertices | 
 															aiProcess_Triangulate |
 															aiProcess_GenNormals );
+	if (!scene)
+	{
+		printf("Couldn't open input file: %s\n", input);
+		return -1;
+	}
 
+	aiMesh *mesh = scene->mMeshes[0];
+
+	if (!mesh)
+	{
+		printf("This file doesn't have a mesh\n");
+		return -1;
+	}
+
+	if (!mesh->HasTextureCoords(0))
+	{
+		printf("Mesh %s doesn't have texture coords\n", mesh->mName.C_Str());
+	}
 	FILE* outputFile;
-	fopen_s(&outputFile, "../../../../Resources/Meshes/cube.mesh", "wb");
+	errno_t err = fopen_s(&outputFile, output, "wb");
+	if (err == EINVAL)
+	{
+		printf("Couldn't open output file: %s\n", output);
+		return -1;
+	}
 	
 	fwrite(EUTS_ID, sizeof(char), sizeof(EUTS_ID), outputFile);
 	fwrite(MESH_ID, sizeof(char), sizeof(MESH_ID), outputFile);
-	printf("EUTS\n");
-	printf("MESH\n");
-
-	aiMesh *mesh = scene->mMeshes[0];
 
 	// num vertex
 	unsigned int numVerts = mesh->mNumVertices;
 	fwrite(&numVerts, sizeof(unsigned int), 1, outputFile);
-	printf("%u\n", numVerts);
-	
 	
 	for (unsigned int i = 0; i < numVerts; ++i)
 	{
@@ -72,7 +99,6 @@ int main(int argc, char *argv[])
 	unsigned int numFaces = mesh->mNumFaces;
 	unsigned int numIndices = numFaces * 3;
 	fwrite(&numIndices, sizeof(unsigned int), 1, outputFile);
-	printf("%u\n", numIndices);
 	for (unsigned int i = 0; i < numFaces; ++i)
 	{
 		aiFace face = mesh->mFaces[i];
@@ -80,9 +106,7 @@ int main(int argc, char *argv[])
 		for (unsigned int j = 0; j < face.mNumIndices; j++)
 		{
 			fwrite(&(face.mIndices[j]), sizeof(unsigned int), 1, outputFile);
-			printf("%u ", face.mIndices[j]);
 		}
-		printf("\n");
 	}
 	
 	
