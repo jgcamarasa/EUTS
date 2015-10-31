@@ -1,1 +1,1 @@
-..\Tools\Bin\MeshConverter.exe "Meshes\bird.dae" "..\Resources\Meshes\bird.mesh"
+for /R %%i in ("Meshes\*.dae") do ..\Tools\Bin\MeshConverter.exe %%i "..\Resources\Meshes\%%~ni.mesh"
