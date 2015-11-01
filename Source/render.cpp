@@ -353,18 +353,22 @@ void EUTS_Render_setTexture(EUTS_RenderState *renderState, ID3D11ShaderResourceV
 	renderState->deviceContext->PSSetShaderResources(0, 1, &texture);
 }
 
-void EUTS_Camera_setPosition(EUTS_Camera *camera, float posX, float posY, float posZ)
+void EUTS_Camera_setTarget(EUTS_Camera *camera, float x, float y, float z)
 {
-	camera->posX = posX;
-	camera->posY = posY;
-	camera->posZ = posZ;
+	camera->targetX = x;
+	camera->targetY = y;
+	camera->targetZ = z;
 }
 
-void EUTS_Camera_setRotation(EUTS_Camera *camera, float rotX, float rotY, float rotZ)
+void EUTS_Camera_setAngles(EUTS_Camera *camera, float rotAngle, float heightAngle)
 {
-	camera->rotX = rotX;
-	camera->rotY = rotY;
-	camera->rotZ = rotZ;
+	camera->rotAngle = rotAngle;
+	camera->heightAngle = heightAngle;
+}
+
+void EUTS_Camera_setDistance(EUTS_Camera *camera, float zoom)
+{
+	camera->zoom = zoom;
 }
 
 void EUTS_Camera_update(EUTS_Camera *camera)
@@ -380,26 +384,24 @@ void EUTS_Camera_update(EUTS_Camera *camera)
 
 	upVector = XMLoadFloat3(&up);
 
-	position.x = camera->posX;
-	position.y = camera->posY;
-	position.z = camera->posZ;
-
+	position.x = camera->zoom;
+	position.y = 0.0f;
+	position.z = 0.0f;
 	positionVector = XMLoadFloat3(&position);
 
-	lookAt.x = 0.0f;
-	lookAt.y = 0.0f;
-	lookAt.z = 1.0f;
+	XMVECTOR rotVector = XMLoadFloat3(&XMFLOAT3(0.0f, 1.0f, 0.0f));
+	XMMATRIX rotMatrix = XMMatrixRotationAxis(rotVector, camera->rotAngle);
+	rotVector = XMLoadFloat3(&XMFLOAT3(0.0f, 0.0f, 1.0f));
+	rotVector = XMVector4Transform(rotVector, rotMatrix);
+
+	rotMatrix *= XMMatrixRotationAxis(rotVector, camera->heightAngle);
+	positionVector = XMVector4Transform(positionVector, rotMatrix);
+
+	lookAt.x = camera->targetX;
+	lookAt.y = camera->targetY;
+	lookAt.z = camera->targetZ;
 
 	lookAtVector = XMLoadFloat3(&lookAt);
 
-	pitch = camera->rotX;
-	yaw = camera->rotY;
-	roll = camera->rotZ;
-
-	rotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
-
-	lookAtVector = XMVector3TransformCoord(lookAtVector, rotationMatrix);
-	upVector = XMVector3TransformCoord(upVector, rotationMatrix);
-	lookAtVector = XMVectorAdd(positionVector, lookAtVector);
 	camera->viewMatrix = XMMatrixLookAtLH(positionVector, lookAtVector, upVector);
 }

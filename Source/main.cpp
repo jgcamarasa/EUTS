@@ -33,8 +33,9 @@ int main()
 	EUTS_Texture_load(&texture, &renderState, "../../../Resources/Textures/bird.png");
 	
 	EUTS_Camera camera;
-	EUTS_Camera_setPosition(&camera, 6.0f, 6.0, -10.0f);
-	EUTS_Camera_setRotation(&camera, 0.5f, -0.5f, 0.0f);
+	EUTS_Camera_setDistance(&camera, 40.0f);
+	EUTS_Camera_setTarget(&camera, 0.0f, 0.0f, 0.0f);
+	EUTS_Camera_setAngles(&camera, 1.0f, 1.0f);
 
 	EUTS_DebugRender_initialize(&renderState);
 
@@ -65,12 +66,21 @@ int main()
 		else
 		{
 			// Otherwise do the frame processing.
+
+			static float timer = 0.0f;
+			EUTS_Camera_setAngles(&camera, timer, 0.5f);
+			timer += 0.01f;
+
 			EUTS_Render_beginFrame(&renderState);
 			EUTS_Camera_update(&camera);
 
 			EUTS_Mesh_bind(&mesh, &renderState);
 			EUTS_Shader_bind(&shader, &renderState);
 			EUTS_ShaderConstants_setSceneMatrices(&shaderConstants, &renderState, &(camera.viewMatrix), &(renderState.projectionMatrix));
+			XMVECTOR rotVector = XMLoadFloat3(&XMFLOAT3(0.0f, 1.0f, 0.0f));
+			static float rot = 0.0f;
+			XMMATRIX modelMatrix = XMMatrixRotationAxis(rotVector, rot);
+			rot += 0.00f;
 			EUTS_ShaderConstants_setModelMatrix(&shaderConstants, &renderState, &(modelMatrix));
 			EUTS_Render_setTexture(&renderState, texture.textureView);
 			renderState.deviceContext->DrawIndexed(mesh.indexCount, 0, 0);

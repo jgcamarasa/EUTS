@@ -63,13 +63,17 @@ void EUTS_Render_setTexture(EUTS_RenderState *renderState, ID3D11ShaderResourceV
 
 struct EUTS_Camera
 {
-	float posX, posY, posZ;
-	float rotX, rotY, rotZ; // radians
+	float targetX, targetY, targetZ;
+	float rotAngle;
+	float heightAngle;
+	float zoom;
 	XMMATRIX viewMatrix;
 };
 
-void EUTS_Camera_setPosition(EUTS_Camera *camera, float posX, float posY, float posZ);
+void EUTS_Camera_setTarget(EUTS_Camera *camera, float x, float y, float z);
 
-void EUTS_Camera_setRotation(EUTS_Camera *camera, float rotX, float rotY, float rotZ);
+void EUTS_Camera_setAngles(EUTS_Camera *camera, float rotAngle, float heightAngle);
+
+void EUTS_Camera_setDistance(EUTS_Camera *camera, float zoom);
 
 void EUTS_Camera_update(EUTS_Camera *camera);
