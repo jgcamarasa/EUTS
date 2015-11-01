@@ -1,8 +1,12 @@
-cbuffer MatrixBuffer
+cbuffer SceneBuffer
 {
-	matrix modelMatrix;
 	matrix viewMatrix;
 	matrix projectionMatrix;
+};
+
+cbuffer ObjectBuffer
+{
+	matrix modelMatrix;
 };
 
 struct VertexInput

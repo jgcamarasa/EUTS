@@ -1,8 +1,17 @@
-cbuffer MatrixBuffer
+cbuffer SceneBuffer
 {
-	matrix modelMatrix;
 	matrix viewMatrix;
 	matrix projectionMatrix;
+};
+
+cbuffer ObjectBuffer
+{
+	matrix modelMatrix;
+};
+
+cbuffer ColorBuffer
+{
+	float4 color;
 };
 
 struct VertexInput
@@ -17,6 +26,7 @@ struct PixelInput
 	float4 position : SV_POSITION;
 	float4 normal   : NORMAL;
 	float2 texCoord : TEXCOORD;
+	float4 color	: COLOR;
 };
 
 
@@ -31,6 +41,7 @@ PixelInput main(VertexInput input)
 
 	output.normal = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	output.texCoord = float2(0.0f, 0.0f);
+	output.color = color;
 
 	return output;
 }

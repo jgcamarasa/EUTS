@@ -17,16 +17,35 @@ struct EUTS_Shader
 	ID3D11VertexShader* vertexShader;
 	ID3D11PixelShader* pixelShader;
 	ID3D11InputLayout* layout;
-	ID3D11Buffer* constantBuffer;
 	ID3D11SamplerState* samplerState;
 };
 
-struct EUTS_VSMatrixConstantBuffer
+struct EUTS_ShaderConstants
 {
-	XMMATRIX model;
+	ID3D11Buffer* sceneBuffer;
+	ID3D11Buffer* objectBuffer;
+	ID3D11Buffer* colorBuffer;
+};
+
+struct EUTS_VSSceneConstantBuffer
+{
 	XMMATRIX view;
 	XMMATRIX projection;
 };
+
+struct EUTS_VSObjectConstantBuffer
+{
+	XMMATRIX model;
+};
+
+struct EUTS_VSColorConstantBuffer
+{
+	XMFLOAT4 color;
+};
+
+void EUTS_ShaderConstants_initialize(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState);
+
+void EUTS_ShaderConstants_finalize(EUTS_ShaderConstants *constants);
 
 void outputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename);
 
@@ -36,4 +55,8 @@ void EUTS_Shader_finalize(EUTS_Shader *shader);
 
 void EUTS_Shader_bind(EUTS_Shader *shader, EUTS_RenderState *renderState);
 
-void EUTS_Shader_setMatrices(EUTS_Shader *shader, EUTS_RenderState *renderState, XMMATRIX *modelMatrix, XMMATRIX *viewMatrix, XMMATRIX *projectionMatrix);
+void EUTS_ShaderConstants_setSceneMatrices(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, XMMATRIX *viewMatrix, XMMATRIX *projectionMatrix);
+
+void EUTS_ShaderConstants_setModelMatrix(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, XMMATRIX *modelMatrix);
+
+void EUTS_ShaderConstants_setColor(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, XMFLOAT4 *color);

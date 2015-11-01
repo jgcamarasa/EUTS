@@ -1,6 +1,46 @@
 #include "shader.h"
 #include <stdio.h>
 
+
+void EUTS_ShaderConstants_initialize(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState)
+{
+	D3D11_BUFFER_DESC constantBufferDesc;
+	HRESULT result;
+	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	constantBufferDesc.ByteWidth = sizeof(EUTS_VSSceneConstantBuffer);
+	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	constantBufferDesc.MiscFlags = 0;
+	constantBufferDesc.StructureByteStride = 0;
+
+	result = renderState->device->CreateBuffer(&constantBufferDesc, NULL, &(constants->sceneBuffer));
+
+	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	constantBufferDesc.ByteWidth = sizeof(EUTS_VSObjectConstantBuffer);
+	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	constantBufferDesc.MiscFlags = 0;
+	constantBufferDesc.StructureByteStride = 0;
+
+	result = renderState->device->CreateBuffer(&constantBufferDesc, NULL, &(constants->objectBuffer));
+
+	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	constantBufferDesc.ByteWidth = sizeof(EUTS_VSColorConstantBuffer);
+	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	constantBufferDesc.MiscFlags = 0;
+	constantBufferDesc.StructureByteStride = 0;
+
+	result = renderState->device->CreateBuffer(&constantBufferDesc, NULL, &(constants->colorBuffer));
+}
+
+void EUTS_ShaderConstants_finalize(EUTS_ShaderConstants *constants)
+{
+	constants->sceneBuffer->Release();
+	constants->objectBuffer->Release();
+	constants->colorBuffer->Release();
+}
+
 void outputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
 {
 	char* compileErrors;
@@ -26,7 +66,6 @@ void outputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shader
 
 void EUTS_Shader_finalize(EUTS_Shader *shader)
 {
-	shader->constantBuffer->Release();
 	shader->layout->Release();
 	shader->pixelShader->Release();
 	shader->vertexShader->Release();
@@ -55,7 +94,6 @@ void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, 
 	ID3DBlob *pixelShaderBuffer;
 	D3D11_INPUT_ELEMENT_DESC layout[3];
 	unsigned int numElements;
-	D3D11_BUFFER_DESC constantBufferDesc;
 	HWND hwnd = renderState->window->handler;
 	D3D11_SAMPLER_DESC samplerDesc;
 
@@ -134,14 +172,6 @@ void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, 
 	vertexShaderBuffer->Release();
 	pixelShaderBuffer->Release();
 
-	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	constantBufferDesc.ByteWidth = sizeof(EUTS_VSMatrixConstantBuffer);
-	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	constantBufferDesc.MiscFlags = 0;
-	constantBufferDesc.StructureByteStride = 0;
-
-	result = renderState->device->CreateBuffer(&constantBufferDesc, NULL, &(shader->constantBuffer));
 
 	if (flags & SHADER_FLAG_TEXTURE)
 	{
@@ -165,31 +195,76 @@ void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, 
 	
 }
 
-void EUTS_Shader_setMatrices(EUTS_Shader *shader, EUTS_RenderState *renderState, XMMATRIX *modelMatrix, XMMATRIX *viewMatrix, XMMATRIX *projectionMatrix)
+// Todo: Indicate which slot
+void EUTS_ShaderConstants_setSceneMatrices(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, XMMATRIX *viewMatrix, XMMATRIX *projectionMatrix)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	EUTS_VSMatrixConstantBuffer *dataPtr;
+	EUTS_VSSceneConstantBuffer *dataPtr;
 	unsigned int bufferNumber;
-	XMMATRIX model, view, projection;
+	XMMATRIX view, projection;
 
 	// It's a requirement to transpose the matrices before passing them to the shader
-	model = XMMatrixTranspose(*modelMatrix);
 	view = XMMatrixTranspose(*viewMatrix);
 	projection = XMMatrixTranspose(*projectionMatrix);
 
-	result = renderState->deviceContext->Map(shader->constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	result = renderState->deviceContext->Map(constants->sceneBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	assert(!FAILED(result));
 
-	dataPtr = (EUTS_VSMatrixConstantBuffer*)mappedResource.pData;
-	dataPtr->model = model;
+	dataPtr = (EUTS_VSSceneConstantBuffer*)mappedResource.pData;
 	dataPtr->view = view;
 	dataPtr->projection = projection;
 
-	renderState->deviceContext->Unmap(shader->constantBuffer, 0);
+	renderState->deviceContext->Unmap(constants->sceneBuffer, 0);
 
-	// Set the position of the constant vuffer in the vertex shader
+	// Set the position of the constant buffer in the vertex shader
 	bufferNumber = 0;
 
-	renderState->deviceContext->VSSetConstantBuffers(bufferNumber, 1, &(shader->constantBuffer));
+	renderState->deviceContext->VSSetConstantBuffers(bufferNumber, 1, &(constants->sceneBuffer));
+}
+
+void EUTS_ShaderConstants_setModelMatrix(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, XMMATRIX *modelMatrix)
+{
+	HRESULT result;
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	EUTS_VSObjectConstantBuffer *dataPtr;
+	unsigned int bufferNumber;
+	XMMATRIX model;
+
+	// It's a requirement to transpose the matrices before passing them to the shader
+	model = XMMatrixTranspose(*modelMatrix);
+
+	result = renderState->deviceContext->Map(constants->objectBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	assert(!FAILED(result));
+
+	dataPtr = (EUTS_VSObjectConstantBuffer*)mappedResource.pData;
+	dataPtr->model = model;
+
+	renderState->deviceContext->Unmap(constants->objectBuffer, 0);
+
+	// Set the position of the constant buffer in the vertex shader
+	bufferNumber = 1;
+
+	renderState->deviceContext->VSSetConstantBuffers(bufferNumber, 1, &(constants->objectBuffer));
+}
+
+void EUTS_ShaderConstants_setColor(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, XMFLOAT4 *color)
+{
+	HRESULT result;
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	EUTS_VSColorConstantBuffer *dataPtr;
+	unsigned int bufferNumber;
+
+	result = renderState->deviceContext->Map(constants->colorBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	assert(!FAILED(result));
+
+	dataPtr = (EUTS_VSColorConstantBuffer*)mappedResource.pData;
+	dataPtr->color = *color;
+
+	renderState->deviceContext->Unmap(constants->colorBuffer, 0);
+
+	// Set the position of the constant buffer in the vertex shader
+	bufferNumber = 2;
+
+	renderState->deviceContext->VSSetConstantBuffers(bufferNumber, 1, &(constants->colorBuffer));
 }
