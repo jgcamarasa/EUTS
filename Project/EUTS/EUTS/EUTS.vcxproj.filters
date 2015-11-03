@@ -78,4 +78,12 @@
       <Filter>Resources</Filter>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\Resources\Shaders\VertexConstants.hlsli">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="..\..\..\Resources\Shaders\PixelConstants.hlsli">
+      <Filter>Resources</Filter>
+    </None>
+  </ItemGroup>
 </Project>

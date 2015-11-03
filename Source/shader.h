@@ -25,6 +25,7 @@ struct EUTS_ShaderConstants
 	ID3D11Buffer* sceneBuffer;
 	ID3D11Buffer* objectBuffer;
 	ID3D11Buffer* colorBuffer;
+	ID3D11Buffer* lightBuffer;
 };
 
 struct EUTS_VSSceneConstantBuffer
@@ -43,6 +44,14 @@ struct EUTS_VSColorConstantBuffer
 	XMFLOAT4 color;
 };
 
+struct EUTS_PSLightConstantBuffer
+{
+	XMFLOAT4 sunDirection;
+	XMFLOAT4 sunDiffuse;
+	XMFLOAT4 ambient;
+};
+
+
 void EUTS_ShaderConstants_initialize(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState);
 
 void EUTS_ShaderConstants_finalize(EUTS_ShaderConstants *constants);
@@ -60,3 +69,5 @@ void EUTS_ShaderConstants_setSceneMatrices(EUTS_ShaderConstants *constants, EUTS
 void EUTS_ShaderConstants_setModelMatrix(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, XMMATRIX *modelMatrix);
 
 void EUTS_ShaderConstants_setColor(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, XMFLOAT4 *color);
+
+void EUTS_ShaderConstants_setLightParameters(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, XMFLOAT4 *sunDirection, XMFLOAT4 *sunDiffuse, XMFLOAT4 *ambient);

@@ -22,7 +22,7 @@ int main()
 	initD3D11(&window, &renderState);
 	
 	EUTS_Mesh mesh;
-	EUTS_Mesh_load(&mesh, &renderState, "../../../Resources/Meshes/cube.mesh");
+	EUTS_Mesh_load(&mesh, &renderState, "../../../Resources/Meshes/island.mesh");
 	
 	EUTS_ShaderConstants shaderConstants;
 	EUTS_ShaderConstants_initialize(&shaderConstants, &renderState);
@@ -30,14 +30,20 @@ int main()
 	EUTS_Shader shader;
 	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/TextureVS.hlsl", L"../../../Resources/Shaders/TexturePS.hlsl", SHADER_FLAG_TEXTURE);
 	EUTS_Texture texture;
-	EUTS_Texture_load(&texture, &renderState, "../../../Resources/Textures/bird.png");
+	EUTS_Texture_load(&texture, &renderState, "../../../Resources/Textures/island.png");
 	
 	EUTS_Camera camera;
 	EUTS_Camera_setDistance(&camera, 40.0f);
 	EUTS_Camera_setTarget(&camera, 0.0f, 0.0f, 0.0f);
-	EUTS_Camera_setAngles(&camera, 1.0f, 1.0f);
+	EUTS_Camera_setAngles(&camera, 1.0f, 0.7f);
 
 	EUTS_DebugRender_initialize(&renderState);
+
+	XMFLOAT4 ambient(0.5, 0.5f, 0.8f, 1.0f);
+	XMFLOAT4 sunDirection(0.0f, 1.f, -1.f, 1.0f);
+	XMFLOAT4 sunColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	
 
 	// Loop
 	MSG msg;
@@ -68,7 +74,8 @@ int main()
 			// Otherwise do the frame processing.
 
 			static float timer = 0.0f;
-			EUTS_Camera_setAngles(&camera, timer, 0.5f);
+			//EUTS_Camera_setAngles(&camera, timer, 0.5f);
+			//EUTS_Camera_setDistance(&camera, 50.0f-timer*2);
 			timer += 0.01f;
 
 			EUTS_Render_beginFrame(&renderState);
@@ -77,11 +84,12 @@ int main()
 			EUTS_Mesh_bind(&mesh, &renderState);
 			EUTS_Shader_bind(&shader, &renderState);
 			EUTS_ShaderConstants_setSceneMatrices(&shaderConstants, &renderState, &(camera.viewMatrix), &(renderState.projectionMatrix));
-			XMVECTOR rotVector = XMLoadFloat3(&XMFLOAT3(0.0f, 1.0f, 0.0f));
+			XMVECTOR rotVector = XMLoadFloat3(&XMFLOAT3(1.0f, 0.0f, 0.0f));
 			static float rot = 0.0f;
 			XMMATRIX modelMatrix = XMMatrixRotationAxis(rotVector, rot);
 			rot += 0.00f;
 			EUTS_ShaderConstants_setModelMatrix(&shaderConstants, &renderState, &(modelMatrix));
+			EUTS_ShaderConstants_setLightParameters(&shaderConstants, &renderState, &sunDirection, &sunColor, &ambient);
 			EUTS_Render_setTexture(&renderState, texture.textureView);
 			renderState.deviceContext->DrawIndexed(mesh.indexCount, 0, 0);
 

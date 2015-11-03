@@ -1,13 +1,4 @@
-cbuffer SceneBuffer
-{
-	matrix viewMatrix;
-	matrix projectionMatrix;
-};
-
-cbuffer ObjectBuffer
-{
-	matrix modelMatrix;
-};
+#include "VertexConstants.hlsli"
 
 struct VertexInput
 {
@@ -34,7 +25,7 @@ PixelInput main(VertexInput input)
 	output.position = mul(output.position, viewMatrix);
 	output.position = mul(output.position, projectionMatrix);
 
-	output.normal = input.normal;
+	output.normal = mul(input.normal, modelMatrix);
 	output.texCoord = input.texCoord;
 
 	return output;

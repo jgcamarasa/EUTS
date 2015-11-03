@@ -32,6 +32,15 @@ void EUTS_ShaderConstants_initialize(EUTS_ShaderConstants *constants, EUTS_Rende
 	constantBufferDesc.StructureByteStride = 0;
 
 	result = renderState->device->CreateBuffer(&constantBufferDesc, NULL, &(constants->colorBuffer));
+
+	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	constantBufferDesc.ByteWidth = sizeof(EUTS_PSLightConstantBuffer);
+	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	constantBufferDesc.MiscFlags = 0;
+	constantBufferDesc.StructureByteStride = 0;
+
+	result = renderState->device->CreateBuffer(&constantBufferDesc, NULL, &(constants->lightBuffer));
 }
 
 void EUTS_ShaderConstants_finalize(EUTS_ShaderConstants *constants)
@@ -39,6 +48,7 @@ void EUTS_ShaderConstants_finalize(EUTS_ShaderConstants *constants)
 	constants->sceneBuffer->Release();
 	constants->objectBuffer->Release();
 	constants->colorBuffer->Release();
+	constants->lightBuffer->Release();
 }
 
 void outputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
@@ -103,7 +113,7 @@ void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, 
 	vertexShaderBuffer = 0;
 	pixelShaderBuffer = 0;
 
-	result = D3DCompileFromFile(vsFilename, NULL, NULL, "main", "vs_5_0",
+	result = D3DCompileFromFile(vsFilename, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", "vs_5_0",
 		D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
 
 	if (FAILED(result))
@@ -118,7 +128,7 @@ void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, 
 		}
 	}
 
-	result = D3DCompileFromFile(psFilename, NULL, NULL, "main", "ps_5_0",
+	result = D3DCompileFromFile(psFilename, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", "ps_5_0",
 		D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
 
 	if (FAILED(result))
@@ -195,7 +205,6 @@ void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, 
 	
 }
 
-// Todo: Indicate which slot
 void EUTS_ShaderConstants_setSceneMatrices(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, XMMATRIX *viewMatrix, XMMATRIX *projectionMatrix)
 {
 	HRESULT result;
@@ -267,4 +276,27 @@ void EUTS_ShaderConstants_setColor(EUTS_ShaderConstants *constants, EUTS_RenderS
 	bufferNumber = 2;
 
 	renderState->deviceContext->VSSetConstantBuffers(bufferNumber, 1, &(constants->colorBuffer));
+}
+
+void EUTS_ShaderConstants_setLightParameters(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, XMFLOAT4 *sunDirection, XMFLOAT4 *sunDiffuse, XMFLOAT4 *ambient)
+{
+	HRESULT result;
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	EUTS_PSLightConstantBuffer *dataPtr;
+	unsigned int bufferNumber;
+
+	result = renderState->deviceContext->Map(constants->lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	assert(!FAILED(result));
+
+	dataPtr = (EUTS_PSLightConstantBuffer*)mappedResource.pData;
+	dataPtr->sunDirection = *sunDirection;
+	dataPtr->sunDiffuse = *sunDiffuse;
+	dataPtr->ambient = *ambient;
+
+	renderState->deviceContext->Unmap(constants->lightBuffer, 0);
+
+	// Set the position of the constant buffer in the pixel shader
+	bufferNumber = 0;
+
+	renderState->deviceContext->PSSetConstantBuffers(bufferNumber, 1, &(constants->lightBuffer));
 }

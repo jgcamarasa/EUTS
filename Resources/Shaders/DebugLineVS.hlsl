@@ -1,18 +1,4 @@
-cbuffer SceneBuffer
-{
-	matrix viewMatrix;
-	matrix projectionMatrix;
-};
-
-cbuffer ObjectBuffer
-{
-	matrix modelMatrix;
-};
-
-cbuffer ColorBuffer
-{
-	float4 color;
-};
+#include "VertexConstants.hlsli"
 
 struct VertexInput
 {
