@@ -195,7 +195,7 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 
 	swapChainDesc.OutputWindow = window->handler;
 
-	swapChainDesc.SampleDesc.Count = 1;
+	swapChainDesc.SampleDesc.Count = 4;
 	swapChainDesc.SampleDesc.Quality = 0;
 
 	if (FULLSCREEN)
@@ -238,7 +238,7 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 	depthBufferDesc.MipLevels = 1;
 	depthBufferDesc.ArraySize = 1;
 	depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthBufferDesc.SampleDesc.Count = 1;
+	depthBufferDesc.SampleDesc.Count = 4;
 	depthBufferDesc.SampleDesc.Quality = 0;
 	depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
@@ -274,7 +274,7 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 
 	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
 	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
 	depthStencilViewDesc.Texture2D.MipSlice = 0;
 
 	result = renderState->device->CreateDepthStencilView(renderState->depthStencilBuffer, &depthStencilViewDesc, &(renderState->depthStencilView));
@@ -289,7 +289,7 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 	rasterDesc.DepthClipEnable = true;
 	rasterDesc.FillMode = D3D11_FILL_SOLID;
 	rasterDesc.FrontCounterClockwise = false;
-	rasterDesc.MultisampleEnable = false;
+	rasterDesc.MultisampleEnable = true;
 	rasterDesc.ScissorEnable = false;
 	rasterDesc.SlopeScaledDepthBias = 0.0f;
 
