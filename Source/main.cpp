@@ -11,6 +11,8 @@
 #include "shader.h"
 #include "texture.h"
 #include "debug_render.h"
+#include <imgui.h>
+#include "imgui_impl_dx11.h"
 
 int main()
 {
@@ -49,6 +51,7 @@ int main()
 	MSG msg;
 	bool done;
 
+	ImGui_ImplDX11_Init(window.handler, renderState.device, renderState.deviceContext);
 
 	// Initialize the message structure.
 	ZeroMemory(&msg, sizeof(MSG));
@@ -77,8 +80,10 @@ int main()
 			//EUTS_Camera_setAngles(&camera, timer, 0.5f);
 			//EUTS_Camera_setDistance(&camera, 50.0f-timer*2);
 			timer += 0.01f;
-
+			
 			EUTS_Render_beginFrame(&renderState);
+			
+
 			EUTS_Camera_update(&camera);
 
 			EUTS_Mesh_bind(&mesh, &renderState);
@@ -100,6 +105,17 @@ int main()
 			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 6.0f, 0.0f), &renderState);
 			EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
 			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 6.0f), &renderState);
+			ImGui_ImplDX11_NewFrame();
+			//if(0)
+			{
+				ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
+				bool show_another_window = true;
+				ImGui::Begin("Another Window", &show_another_window);
+				ImGui::Text("Hello");
+				ImGui::End();
+			}
+
+			ImGui::Render();
 			EUTS_Render_endFrame(&renderState);
 		}
 

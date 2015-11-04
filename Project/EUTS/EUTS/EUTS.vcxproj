@@ -52,6 +52,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\Source\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -77,6 +78,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\debug_render.cpp" />
+    <ClCompile Include="..\..\..\Source\imgui\imgui.cpp" />
+    <ClCompile Include="..\..\..\Source\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\..\..\Source\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\..\..\Source\imgui_impl_dx11.cpp" />
     <ClCompile Include="..\..\..\Source\main.cpp" />
     <ClCompile Include="..\..\..\Source\mesh.cpp" />
     <ClCompile Include="..\..\..\Source\render.cpp" />
@@ -85,6 +90,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\debug_render.h" />
+    <ClInclude Include="..\..\..\Source\imgui\imconfig.h" />
+    <ClInclude Include="..\..\..\Source\imgui\imgui.h" />
+    <ClInclude Include="..\..\..\Source\imgui\imgui_internal.h" />
+    <ClInclude Include="..\..\..\Source\imgui\stb_rect_pack.h" />
+    <ClInclude Include="..\..\..\Source\imgui\stb_textedit.h" />
+    <ClInclude Include="..\..\..\Source\imgui\stb_truetype.h" />
+    <ClInclude Include="..\..\..\Source\imgui_impl_dx11.h" />
     <ClInclude Include="..\..\..\Source\mesh.h" />
     <ClInclude Include="..\..\..\Source\render.h" />
     <ClInclude Include="..\..\..\Source\shader.h" />
