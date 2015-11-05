@@ -1,9 +1,15 @@
 #include "render.h"
+#include "imgui\imgui.h"
+#include "imgui_impl_dx11.h"
 
+extern LRESULT ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
 	HDC hdc;
+
+	if (ImGui_ImplDX11_WndProcHandler(hWnd, message, wParam, lParam))
+		return true;
 
 	switch (message)
 	{
@@ -331,8 +337,9 @@ void EUTS_Render_beginFrame(EUTS_RenderState *renderState)
 {
 	float color[4] = { 0.5f, 0.8f, 1.0f, 1.0f };
 
+	renderState->deviceContext->RSSetState(renderState->rasterState);
+	renderState->deviceContext->OMSetDepthStencilState(renderState->depthStencilState, 1);
 	renderState->deviceContext->ClearRenderTargetView(renderState->renderTargetView, color);
-
 	renderState->deviceContext->ClearDepthStencilView(renderState->depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }
 

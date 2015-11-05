@@ -78,9 +78,12 @@ int main()
 
 			static float timer = 0.0f;
 			//EUTS_Camera_setAngles(&camera, timer, 0.5f);
-			//EUTS_Camera_setDistance(&camera, 50.0f-timer*2);
+			EUTS_Camera_setDistance(&camera, 50.0f-timer*2);
 			timer += 0.01f;
-			
+
+			float color[4] = { 0.5f, 0.8f, 0.0f, 1.0f };
+			renderState.deviceContext->ClearRenderTargetView(renderState.renderTargetView, color);
+			renderState.deviceContext->ClearDepthStencilView(renderState.depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 			EUTS_Render_beginFrame(&renderState);
 			
 

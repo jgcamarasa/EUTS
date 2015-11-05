@@ -32,6 +32,7 @@ static ID3D11SamplerState*      g_pFontSampler = NULL;
 static ID3D11ShaderResourceView*g_pFontTextureView = NULL;
 static ID3D11RasterizerState*   g_pRasterizerState = NULL;
 static ID3D11BlendState*        g_pBlendState = NULL;
+static ID3D11DepthStencilState*	g_pDepthState = NULL;
 static int                      g_VertexBufferSize = 5000, g_IndexBufferSize = 10000;
 
 struct VERTEX_CONSTANT_BUFFER
@@ -142,6 +143,7 @@ void ImGui_ImplDX11_RenderDrawLists(ImDrawData* draw_data)
     // Setup render state
     const float blendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
     g_pd3dDeviceContext->OMSetBlendState(g_pBlendState, blendFactor, 0xffffffff);
+	g_pd3dDeviceContext->OMSetDepthStencilState(g_pDepthState, 1);
     g_pd3dDeviceContext->RSSetState(g_pRasterizerState);
 
     // Render command lists
@@ -174,8 +176,8 @@ void ImGui_ImplDX11_RenderDrawLists(ImDrawData* draw_data)
     g_pd3dDeviceContext->PSSetShader(NULL, NULL, 0);
     g_pd3dDeviceContext->VSSetShader(NULL, NULL, 0);
 }
-
-IMGUI_API LRESULT ImGui_ImplDX11_WndProcHandler(HWND, UINT msg, WPARAM wParam, LPARAM lParam)
+#include <stdio.h>
+IMGUI_API LRESULT ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     ImGuiIO& io = ImGui::GetIO();
     switch (msg)
@@ -204,6 +206,7 @@ IMGUI_API LRESULT ImGui_ImplDX11_WndProcHandler(HWND, UINT msg, WPARAM wParam, L
     case WM_MOUSEMOVE:
         io.MousePos.x = (signed short)(lParam);
         io.MousePos.y = (signed short)(lParam >> 16); 
+		printf("%f, %f\n", io.MousePos.x, io.MousePos.y);
         return true;
     case WM_KEYDOWN:
         if (wParam < 256)
@@ -392,6 +395,30 @@ bool    ImGui_ImplDX11_CreateDeviceObjects()
         g_pd3dDevice->CreateBlendState(&desc, &g_pBlendState);
     }
 
+	{
+		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+		ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
+		depthStencilDesc.DepthEnable = false;
+		depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+		depthStencilDesc.StencilEnable = false;
+		depthStencilDesc.StencilReadMask = 0xFF;
+		depthStencilDesc.StencilWriteMask = 0xFF;
+
+		depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+		depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+		depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+		depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+		g_pd3dDevice->CreateDepthStencilState(&depthStencilDesc, &g_pDepthState);
+	}
+
     // Create the rasterizer state
     {
         D3D11_RASTERIZER_DESC desc;
@@ -419,6 +446,7 @@ void    ImGui_ImplDX11_InvalidateDeviceObjects()
     if (g_pVB) { g_pVB->Release(); g_pVB = NULL; }
 
     if (g_pBlendState) { g_pBlendState->Release(); g_pBlendState = NULL; }
+	if (g_pDepthState) { g_pDepthState->Release(); g_pDepthState = NULL; }
     if (g_pRasterizerState) { g_pRasterizerState->Release(); g_pRasterizerState = NULL; }
     if (g_pPixelShader) { g_pPixelShader->Release(); g_pPixelShader = NULL; }
     if (g_pPixelShaderBlob) { g_pPixelShaderBlob->Release(); g_pPixelShaderBlob = NULL; }
@@ -486,7 +514,6 @@ void ImGui_ImplDX11_NewFrame()
     RECT rect;
     GetClientRect(g_hWnd, &rect);
     io.DisplaySize = ImVec2((float)(rect.right - rect.left), (float)(rect.bottom - rect.top));
-
     // Setup time step
     INT64 current_time;
     QueryPerformanceCounter((LARGE_INTEGER *)&current_time); 
