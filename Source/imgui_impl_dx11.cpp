@@ -206,7 +206,6 @@ IMGUI_API LRESULT ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPARAM wPar
     case WM_MOUSEMOVE:
         io.MousePos.x = (signed short)(lParam);
         io.MousePos.y = (signed short)(lParam >> 16); 
-		printf("%f, %f\n", io.MousePos.x, io.MousePos.y);
         return true;
     case WM_KEYDOWN:
         if (wParam < 256)

@@ -45,7 +45,14 @@ int main()
 	XMFLOAT4 sunDirection(0.0f, 1.f, -1.f, 1.0f);
 	XMFLOAT4 sunColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-	
+	float guiSunDirection[3];
+	float guiSunColor[3];
+	guiSunDirection[0] = sunDirection.x;
+	guiSunDirection[1] = sunDirection.y;
+	guiSunDirection[2] = sunDirection.z;
+	guiSunColor[0] = sunColor.x;
+	guiSunColor[1] = sunColor.y;
+	guiSunColor[2] = sunColor.z;
 
 	// Loop
 	MSG msg;
@@ -76,10 +83,10 @@ int main()
 		{
 			// Otherwise do the frame processing.
 
-			static float timer = 0.0f;
-			//EUTS_Camera_setAngles(&camera, timer, 0.5f);
-			EUTS_Camera_setDistance(&camera, 50.0f-timer*2);
-			timer += 0.01f;
+			static float cameraDistance = 50.0f;
+			static float cameraHeight = 0.7f;
+			EUTS_Camera_setAngles(&camera, 1.0, cameraHeight);
+			EUTS_Camera_setDistance(&camera, cameraDistance);
 
 			float color[4] = { 0.5f, 0.8f, 0.0f, 1.0f };
 			renderState.deviceContext->ClearRenderTargetView(renderState.renderTargetView, color);
@@ -109,14 +116,22 @@ int main()
 			EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
 			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 6.0f), &renderState);
 			ImGui_ImplDX11_NewFrame();
-			//if(0)
+			// 1. Show a simple window
+			// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
 			{
-				ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
-				bool show_another_window = true;
-				ImGui::Begin("Another Window", &show_another_window);
-				ImGui::Text("Hello");
-				ImGui::End();
+				ImGui::SliderFloat("Camera Distance", &cameraDistance, 5.0f, 60.0f);
+				ImGui::SliderAngle("Camera Height", &cameraHeight, -80.0f, 80.0f);
+				ImGui::SliderFloat3("Sun Direction", guiSunDirection, -1.0f, 1.0f);
+				ImGui::ColorEdit3("Sun Color", guiSunColor);
+				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			}
+			sunDirection.x = guiSunDirection[0];
+			sunDirection.y = guiSunDirection[1];
+			sunDirection.z = guiSunDirection[2];
+			sunColor.x = guiSunColor[0];
+			sunColor.y = guiSunColor[1];
+			sunColor.z = guiSunColor[2];
+			
 
 			ImGui::Render();
 			EUTS_Render_endFrame(&renderState);
