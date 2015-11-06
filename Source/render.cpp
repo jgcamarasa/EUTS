@@ -86,20 +86,35 @@ void initWindow(EUTS_Window *window)
 		posX = posY = 0;
 
 		style = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_POPUP;
+
+		window->width = screenWidth;
+		window->height = screenHeight;
 	}
 	else
 	{
-		// If windowed then set it to 800x600 resolution.
+		// If windowed then set it to 1280x768 resolution.
 		screenWidth = 1280;
 		screenHeight = 768;
+
+		RECT rect;
+		rect.top = 0;
+		rect.left = 0;
+		rect.right = screenWidth;
+		rect.bottom = screenHeight;
+		AdjustWindowRectEx(&rect, style, 0, 0);
+
+		window->width = screenWidth;
+		window->height = screenHeight;
+
+		screenWidth = rect.right - rect.left;
+		screenHeight = rect.bottom - rect.top;
 
 		// Place the window in the middle of the screen.
 		posX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth) / 2;
 		posY = (GetSystemMetrics(SM_CYSCREEN) - screenHeight) / 2;
 	}
 
-	window->width = screenWidth;
-	window->height = screenHeight;
+	
 	window->fullScreen = FULLSCREEN;
 
 	// Create the window with the screen settings and get the handle to it.
