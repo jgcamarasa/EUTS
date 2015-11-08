@@ -85,7 +85,8 @@ int main()
 
 			static float cameraDistance = 50.0f;
 			static float cameraHeight = 0.7f;
-			EUTS_Camera_setAngles(&camera, 1.0, cameraHeight);
+			static float cameraRotation = 1.0f;
+			EUTS_Camera_setAngles(&camera, cameraRotation, cameraHeight);
 			EUTS_Camera_setDistance(&camera, cameraDistance);
 
 			float color[4] = { 0.5f, 0.8f, 0.0f, 1.0f };
@@ -120,6 +121,7 @@ int main()
 			// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
 			{
 				ImGui::SliderFloat("Camera Distance", &cameraDistance, 5.0f, 60.0f);
+				ImGui::SliderAngle("Camera Rotation", &cameraRotation);
 				ImGui::SliderAngle("Camera Height", &cameraHeight, -80.0f, 80.0f);
 				ImGui::SliderFloat3("Sun Direction", guiSunDirection, -1.0f, 1.0f);
 				ImGui::ColorEdit3("Sun Color", guiSunColor);
