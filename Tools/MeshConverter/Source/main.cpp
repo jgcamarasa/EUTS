@@ -25,6 +25,7 @@ bool gWriteDebug = true;
 
 int main(int argc, char *argv[])
 {
+#ifndef _DEBUG
 	if (argc != 3)
 	{
 		printf("MeshConvertex.exe inputFile outputFile\n");
@@ -33,6 +34,10 @@ int main(int argc, char *argv[])
 
 	const char *input = argv[1];
 	const char *output = argv[2];
+#else
+	const char input[] = "C:\\Users\\Alegría\\Documents\\EUTS\\Content\\Meshes\\tree.dae";
+	const char output[] = "debugOutput.mesh";
+#endif
 
 	printf("Processing %s\n", input);
 
@@ -48,7 +53,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	aiMesh *mesh = scene->mMeshes[0];
+	aiMesh *mesh = scene->mMeshes[scene->mNumMeshes-1];
 
 	if (!mesh)
 	{
