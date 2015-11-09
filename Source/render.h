@@ -12,7 +12,7 @@ using namespace DirectX;
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
-const bool FULLSCREEN = false;
+const bool FULLSCREEN = true;
 const bool VSYNC = true;
 const float SCREEN_NEAR = 0.1f;
 const float SCREEN_DEPTH = 1000.0f;

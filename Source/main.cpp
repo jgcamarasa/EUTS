@@ -23,16 +23,21 @@ int main()
 	EUTS_RenderState renderState;
 	initD3D11(&window, &renderState);
 	
-	EUTS_Mesh mesh;
-	EUTS_Mesh_load(&mesh, &renderState, "../../../Resources/Meshes/tree.mesh");
+	EUTS_Mesh islandMesh;
+	EUTS_Mesh_load(&islandMesh, &renderState, "../../../Resources/Meshes/island.mesh");
+	EUTS_Mesh treeMesh;
+	EUTS_Mesh_load(&treeMesh, &renderState, "../../../Resources/Meshes/tree.mesh");
 	
 	EUTS_ShaderConstants shaderConstants;
 	EUTS_ShaderConstants_initialize(&shaderConstants, &renderState);
 
 	EUTS_Shader shader;
 	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/TextureVS.hlsl", L"../../../Resources/Shaders/TexturePS.hlsl", SHADER_FLAG_TEXTURE);
-	EUTS_Texture texture;
-	EUTS_Texture_load(&texture, &renderState, "../../../Resources/Textures/tree.png");
+	
+	EUTS_Texture islandTexture;
+	EUTS_Texture_load(&islandTexture, &renderState, "../../../Resources/Textures/island.png");
+	EUTS_Texture treeTexture;
+	EUTS_Texture_load(&treeTexture, &renderState, "../../../Resources/Textures/tree.png");
 	
 	EUTS_Camera camera;
 	EUTS_Camera_setDistance(&camera, 40.0f);
@@ -97,7 +102,6 @@ int main()
 
 			EUTS_Camera_update(&camera);
 
-			EUTS_Mesh_bind(&mesh, &renderState);
 			EUTS_Shader_bind(&shader, &renderState);
 			EUTS_ShaderConstants_setSceneMatrices(&shaderConstants, &renderState, &(camera.viewMatrix), &(renderState.projectionMatrix));
 			XMVECTOR rotVector = XMLoadFloat3(&XMFLOAT3(1.0f, 0.0f, 0.0f));
@@ -106,8 +110,12 @@ int main()
 			rot += 0.00f;
 			EUTS_ShaderConstants_setModelMatrix(&shaderConstants, &renderState, &(modelMatrix));
 			EUTS_ShaderConstants_setLightParameters(&shaderConstants, &renderState, &sunDirection, &sunColor, &ambient);
-			EUTS_Render_setTexture(&renderState, texture.textureView);
-			renderState.deviceContext->DrawIndexed(mesh.indexCount, 0, 0);
+			EUTS_Mesh_bind(&treeMesh, &renderState);
+			EUTS_Render_setTexture(&renderState, treeTexture.textureView);
+			renderState.deviceContext->DrawIndexed(treeMesh.indexCount, 0, 0);
+			EUTS_Mesh_bind(&islandMesh, &renderState);
+			EUTS_Render_setTexture(&renderState, islandTexture.textureView);
+			renderState.deviceContext->DrawIndexed(islandMesh.indexCount, 0, 0);
 
 			EUTS_ShaderConstants_setModelMatrix(&shaderConstants, &renderState, &XMMatrixIdentity());
 			EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
@@ -142,8 +150,10 @@ int main()
 	}
 
 	EUTS_DebugRender_finalize();
-	EUTS_Texture_delete(&texture);
-	EUTS_Mesh_finalize(&mesh);
+	EUTS_Texture_delete(&treeTexture);
+	EUTS_Texture_delete(&islandTexture);
+	EUTS_Mesh_finalize(&treeMesh);
+	EUTS_Mesh_finalize(&islandMesh);
 	EUTS_Shader_finalize(&shader);
 	EUTS_ShaderConstants_finalize(&shaderConstants);
 	finalizeD3D11(&renderState);
