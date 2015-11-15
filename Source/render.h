@@ -12,10 +12,12 @@ using namespace DirectX;
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
-const bool FULLSCREEN = true;
+const bool FULLSCREEN = false;
 const bool VSYNC = true;
 const float SCREEN_NEAR = 0.1f;
 const float SCREEN_DEPTH = 1000.0f;
+const int SCREEN_WIDTH = 1280;
+const int SCREEN_HEIGHT = 768;
 
 
 struct EUTS_Window
@@ -48,6 +50,13 @@ struct EUTS_RenderState
 	char					videoCardDescription[128];
 };
 
+struct EUTS_RenderTarget
+{
+	ID3D11Texture2D	*texture;
+	ID3D11RenderTargetView	*view;
+	ID3D11ShaderResourceView *shaderResourceView;
+};
+
 void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState);
 
 void finalizeD3D11(EUTS_RenderState *renderState);
@@ -58,7 +67,14 @@ void EUTS_Render_endFrame(EUTS_RenderState *renderState);
 
 void EUTS_Render_setTexture(EUTS_RenderState *renderState, ID3D11ShaderResourceView* texture); // Todo: More textures?
 
+void EUTS_Render_setRenderTarget(EUTS_RenderState *renderState, EUTS_RenderTarget *renderTarget);
 
+
+void EUTS_RenderTarget_initialize(EUTS_RenderTarget *renderTarget, EUTS_RenderState *state, int width, int height);
+
+void EUTS_RenderTarget_finalize(EUTS_RenderTarget *renderTarget);
+
+void EUTS_RenderTarget_clear(EUTS_RenderTarget *renderTarget, EUTS_RenderState *state, float r, float g, float b, float a);
 
 
 struct EUTS_Camera

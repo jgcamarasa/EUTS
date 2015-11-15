@@ -44,6 +44,9 @@ int main()
 	EUTS_Camera_setTarget(&camera, 0.0f, 0.0f, 0.0f);
 	EUTS_Camera_setAngles(&camera, 1.0f, 0.7f);
 
+	EUTS_RenderTarget renderTarget;
+	EUTS_RenderTarget_initialize(&renderTarget, &renderState, SCREEN_WIDTH, SCREEN_HEIGHT);
+
 	EUTS_DebugRender_initialize(&renderState);
 
 	XMFLOAT4 ambient(0.5, 0.5f, 0.8f, 1.0f);
@@ -110,6 +113,9 @@ int main()
 			rot += 0.00f;
 			EUTS_ShaderConstants_setModelMatrix(&shaderConstants, &renderState, &(modelMatrix));
 			EUTS_ShaderConstants_setLightParameters(&shaderConstants, &renderState, &sunDirection, &sunColor, &ambient);
+
+			EUTS_Render_setRenderTarget(&renderState, &renderTarget);
+			EUTS_RenderTarget_clear(&renderTarget, &renderState, 0.0f, 0.0f, 1.0f, 1.0f);
 			EUTS_Mesh_bind(&treeMesh, &renderState);
 			EUTS_Render_setTexture(&renderState, treeTexture.textureView);
 			renderState.deviceContext->DrawIndexed(treeMesh.indexCount, 0, 0);
@@ -124,6 +130,8 @@ int main()
 			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 6.0f, 0.0f), &renderState);
 			EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
 			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 6.0f), &renderState);
+
+
 			ImGui_ImplDX11_NewFrame();
 			// 1. Show a simple window
 			// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
@@ -150,6 +158,7 @@ int main()
 	}
 
 	EUTS_DebugRender_finalize();
+	EUTS_RenderTarget_finalize(&renderTarget);
 	EUTS_Texture_delete(&treeTexture);
 	EUTS_Texture_delete(&islandTexture);
 	EUTS_Mesh_finalize(&treeMesh);

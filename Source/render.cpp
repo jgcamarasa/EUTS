@@ -93,8 +93,8 @@ void initWindow(EUTS_Window *window)
 	else
 	{
 		// If windowed then set it to 1280x768 resolution.
-		screenWidth = 1280;
-		screenHeight = 768;
+		screenWidth = SCREEN_WIDTH;
+		screenHeight = SCREEN_HEIGHT;
 
 		RECT rect;
 		rect.top = 0;
@@ -374,6 +374,78 @@ void EUTS_Render_setTexture(EUTS_RenderState *renderState, ID3D11ShaderResourceV
 {
 	renderState->deviceContext->PSSetShaderResources(0, 1, &texture);
 }
+
+void EUTS_Render_setRenderTarget(EUTS_RenderState *renderState, EUTS_RenderTarget *renderTarget)
+{
+	renderState->deviceContext->OMSetRenderTargets(1, &(renderTarget->view), renderState->depthStencilView);
+}
+
+void EUTS_Render_setDefaultRenderTarget(EUTS_RenderState *renderState)
+{
+	renderState->deviceContext->OMSetRenderTargets(1, &(renderState->renderTargetView), renderState->depthStencilView);
+}
+
+void EUTS_RenderTarget_initialize(EUTS_RenderTarget *renderTarget, EUTS_RenderState *state, int width, int height)
+{
+	D3D11_TEXTURE2D_DESC textureDesc;
+	HRESULT result;
+	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+
+	// Initialize the render target texture description.
+	ZeroMemory(&textureDesc, sizeof(textureDesc));
+
+	// Setup the render target texture description.
+	textureDesc.Width = width;
+	textureDesc.Height = height;
+	textureDesc.MipLevels = 1;
+	textureDesc.ArraySize = 1;
+	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	textureDesc.SampleDesc.Count = 4;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE; // ?
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.MiscFlags = 0;
+
+	result = state->device->CreateTexture2D(&textureDesc, NULL, &(renderTarget->texture));
+	assert(!FAILED(result));
+
+	renderTargetViewDesc.Format = textureDesc.Format;
+	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+	renderTargetViewDesc.Texture2D.MipSlice = 0;
+
+	result = state->device->CreateRenderTargetView(renderTarget->texture, &renderTargetViewDesc, &(renderTarget->view));
+	assert(!FAILED(result));
+
+	shaderResourceViewDesc.Format = textureDesc.Format;
+	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;
+	shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+	shaderResourceViewDesc.Texture2D.MipLevels = 1;
+
+	result = state->device->CreateShaderResourceView((renderTarget->texture), &shaderResourceViewDesc, &(renderTarget->shaderResourceView));
+	assert(!FAILED(result));
+}
+
+void EUTS_RenderTarget_finalize(EUTS_RenderTarget *renderTarget)
+{
+	renderTarget->shaderResourceView->Release();
+	renderTarget->view->Release();
+	renderTarget->texture->Release();
+}
+
+void EUTS_RenderTarget_clear(EUTS_RenderTarget *renderTarget, EUTS_RenderState *state, float r, float g, float b, float a)
+{
+	float color[4];
+	color[0] = r;
+	color[1] = g;
+	color[2] = b;
+	color[3] = a;
+
+	state->deviceContext->ClearRenderTargetView(renderTarget->view, color);
+	state->deviceContext->ClearDepthStencilView(state->depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+}
+
+
 
 void EUTS_Camera_setTarget(EUTS_Camera *camera, float x, float y, float z)
 {
