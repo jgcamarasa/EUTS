@@ -93,6 +93,41 @@ void EUTS_Mesh_load(EUTS_Mesh *mesh, EUTS_RenderState *renderState, const char *
 	EUTS_MeshDescriptor_finalize(&descriptor);
 }
 
+void EUTS_Mesh_loadQuad(EUTS_Mesh *mesh, EUTS_RenderState *renderState)
+{
+	EUTS_MeshDescriptor descriptor;
+	descriptor.indexCount = 6;
+	descriptor.indices = (unsigned int*)malloc(6 * sizeof(unsigned int));
+	descriptor.vertexCount = 6;
+	descriptor.vertices = (EUTS_Vertex*)malloc(6 * sizeof(EUTS_Vertex));
+	for (unsigned int i = 0; i < descriptor.indexCount; ++i)
+	{
+		descriptor.indices[i] = i;
+	}
+	
+	float left = -1.0f;
+	float right = 1.0f;
+	float top = 1.0f;
+	float bottom = -1.0f;
+	descriptor.vertices[0].position = XMFLOAT3(left, top, 0.0f);
+	descriptor.vertices[1].position = XMFLOAT3(right, bottom, 0.0f);
+	descriptor.vertices[2].position = XMFLOAT3(left, bottom, 0.0f);
+	descriptor.vertices[3].position = XMFLOAT3(left, top, 0.0f);
+	descriptor.vertices[4].position = XMFLOAT3(right, top, 0.0f);
+	descriptor.vertices[5].position = XMFLOAT3(right, bottom, 0.0f);
+
+	descriptor.vertices[0].texCoord = XMFLOAT2(0.0f, 0.0f);
+	descriptor.vertices[1].texCoord = XMFLOAT2(1.0f, 1.0f);
+	descriptor.vertices[2].texCoord = XMFLOAT2(0.0f, 1.0f);
+	descriptor.vertices[3].texCoord = XMFLOAT2(0.0f, 0.0f);
+	descriptor.vertices[4].texCoord = XMFLOAT2(1.0f, 0.0f);
+	descriptor.vertices[5].texCoord = XMFLOAT2(1.0f, 1.0f);
+	
+
+	EUTS_Mesh_initialize(mesh, renderState, &descriptor);
+	EUTS_MeshDescriptor_finalize(&descriptor);
+}
+
 void EUTS_Mesh_finalize(EUTS_Mesh *mesh)
 {
 	mesh->indexBuffer->Release();

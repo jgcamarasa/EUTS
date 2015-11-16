@@ -216,7 +216,7 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 
 	swapChainDesc.OutputWindow = window->handler;
 
-	swapChainDesc.SampleDesc.Count = 4;
+	swapChainDesc.SampleDesc.Count = 1;
 	swapChainDesc.SampleDesc.Quality = 0;
 
 	if (FULLSCREEN)
@@ -259,7 +259,7 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 	depthBufferDesc.MipLevels = 1;
 	depthBufferDesc.ArraySize = 1;
 	depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthBufferDesc.SampleDesc.Count = 4;
+	depthBufferDesc.SampleDesc.Count = 1;
 	depthBufferDesc.SampleDesc.Quality = 0;
 	depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
@@ -295,7 +295,7 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 
 	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
 	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	depthStencilViewDesc.Texture2D.MipSlice = 0;
 
 	result = renderState->device->CreateDepthStencilView(renderState->depthStencilBuffer, &depthStencilViewDesc, &(renderState->depthStencilView));
@@ -401,7 +401,7 @@ void EUTS_RenderTarget_initialize(EUTS_RenderTarget *renderTarget, EUTS_RenderSt
 	textureDesc.MipLevels = 1;
 	textureDesc.ArraySize = 1;
 	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	textureDesc.SampleDesc.Count = 4;
+	textureDesc.SampleDesc.Count = 1;
 	textureDesc.Usage = D3D11_USAGE_DEFAULT;
 	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE; // ?
 	textureDesc.CPUAccessFlags = 0;
@@ -411,14 +411,14 @@ void EUTS_RenderTarget_initialize(EUTS_RenderTarget *renderTarget, EUTS_RenderSt
 	assert(!FAILED(result));
 
 	renderTargetViewDesc.Format = textureDesc.Format;
-	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 	renderTargetViewDesc.Texture2D.MipSlice = 0;
 
 	result = state->device->CreateRenderTargetView(renderTarget->texture, &renderTargetViewDesc, &(renderTarget->view));
 	assert(!FAILED(result));
 
 	shaderResourceViewDesc.Format = textureDesc.Format;
-	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;
+	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
 	shaderResourceViewDesc.Texture2D.MipLevels = 1;
 

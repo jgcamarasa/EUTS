@@ -69,6 +69,8 @@ void EUTS_Render_setTexture(EUTS_RenderState *renderState, ID3D11ShaderResourceV
 
 void EUTS_Render_setRenderTarget(EUTS_RenderState *renderState, EUTS_RenderTarget *renderTarget);
 
+void EUTS_Render_setDefaultRenderTarget(EUTS_RenderState *renderState);
+
 
 void EUTS_RenderTarget_initialize(EUTS_RenderTarget *renderTarget, EUTS_RenderState *state, int width, int height);
 

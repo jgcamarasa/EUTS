@@ -27,12 +27,17 @@ int main()
 	EUTS_Mesh_load(&islandMesh, &renderState, "../../../Resources/Meshes/island.mesh");
 	EUTS_Mesh treeMesh;
 	EUTS_Mesh_load(&treeMesh, &renderState, "../../../Resources/Meshes/tree.mesh");
+	EUTS_Mesh quadMesh;
+	EUTS_Mesh_loadQuad(&quadMesh, &renderState);
 	
 	EUTS_ShaderConstants shaderConstants;
 	EUTS_ShaderConstants_initialize(&shaderConstants, &renderState);
 
 	EUTS_Shader shader;
 	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/TextureVS.hlsl", L"../../../Resources/Shaders/TexturePS.hlsl", SHADER_FLAG_TEXTURE);
+
+	EUTS_Shader fsShader;
+	EUTS_Shader_initialize(&fsShader, &renderState, L"../../../Resources/Shaders/PostVS.hlsl", L"../../../Resources/Shaders/BlurPS.hlsl", SHADER_FLAG_TEXTURE);
 	
 	EUTS_Texture islandTexture;
 	EUTS_Texture_load(&islandTexture, &renderState, "../../../Resources/Textures/island.png");
@@ -102,6 +107,8 @@ int main()
 			renderState.deviceContext->ClearDepthStencilView(renderState.depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 			EUTS_Render_beginFrame(&renderState);
 			
+			EUTS_Render_setRenderTarget(&renderState, &renderTarget);
+			EUTS_RenderTarget_clear(&renderTarget, &renderState, 0.0f, 0.0f, 1.0f, 1.0f);
 
 			EUTS_Camera_update(&camera);
 
@@ -114,8 +121,6 @@ int main()
 			EUTS_ShaderConstants_setModelMatrix(&shaderConstants, &renderState, &(modelMatrix));
 			EUTS_ShaderConstants_setLightParameters(&shaderConstants, &renderState, &sunDirection, &sunColor, &ambient);
 
-			EUTS_Render_setRenderTarget(&renderState, &renderTarget);
-			EUTS_RenderTarget_clear(&renderTarget, &renderState, 0.0f, 0.0f, 1.0f, 1.0f);
 			EUTS_Mesh_bind(&treeMesh, &renderState);
 			EUTS_Render_setTexture(&renderState, treeTexture.textureView);
 			renderState.deviceContext->DrawIndexed(treeMesh.indexCount, 0, 0);
@@ -131,6 +136,12 @@ int main()
 			EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
 			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 6.0f), &renderState);
 
+			EUTS_Render_setDefaultRenderTarget(&renderState);
+
+			EUTS_Mesh_bind(&quadMesh, &renderState);
+			EUTS_Shader_bind(&fsShader, &renderState);
+			EUTS_Render_setTexture(&renderState, renderTarget.shaderResourceView);
+			renderState.deviceContext->DrawIndexed(quadMesh.indexCount, 0, 0);
 
 			ImGui_ImplDX11_NewFrame();
 			// 1. Show a simple window
@@ -161,9 +172,11 @@ int main()
 	EUTS_RenderTarget_finalize(&renderTarget);
 	EUTS_Texture_delete(&treeTexture);
 	EUTS_Texture_delete(&islandTexture);
+	EUTS_Mesh_finalize(&quadMesh);
 	EUTS_Mesh_finalize(&treeMesh);
 	EUTS_Mesh_finalize(&islandMesh);
 	EUTS_Shader_finalize(&shader);
+	EUTS_Shader_finalize(&fsShader);
 	EUTS_ShaderConstants_finalize(&shaderConstants);
 	finalizeD3D11(&renderState);
 

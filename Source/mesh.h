@@ -29,6 +29,8 @@ void EUTS_Mesh_initialize(EUTS_Mesh *mesh, EUTS_RenderState *renderState, EUTS_M
 
 void EUTS_Mesh_load(EUTS_Mesh *mesh, EUTS_RenderState *renderState, const char *fileName);
 
+void EUTS_Mesh_loadQuad(EUTS_Mesh *mesh, EUTS_RenderState *renderState);
+
 void EUTS_Mesh_finalize(EUTS_Mesh *mesh);
 
 void EUTS_Mesh_bind(EUTS_Mesh *mesh, EUTS_RenderState *renderState);

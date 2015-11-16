@@ -113,6 +113,12 @@
     <FxCompile Include="..\..\..\Resources\Shaders\DebugLineVS.hlsl">
       <Filter>Resources</Filter>
     </FxCompile>
+    <FxCompile Include="..\..\..\Resources\Shaders\PostVS.hlsl">
+      <Filter>Resources</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\..\Resources\Shaders\BlurPS.hlsl">
+      <Filter>Resources</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\Resources\Shaders\VertexConstants.hlsli">
