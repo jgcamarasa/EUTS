@@ -26,6 +26,7 @@ struct EUTS_ShaderConstants
 	ID3D11Buffer* objectBuffer;
 	ID3D11Buffer* colorBuffer;
 	ID3D11Buffer* lightBuffer;
+	ID3D11Buffer* renderTargetBuffer;
 };
 
 struct EUTS_VSSceneConstantBuffer
@@ -51,6 +52,11 @@ struct EUTS_PSLightConstantBuffer
 	XMFLOAT4 ambient;
 };
 
+struct EUTS_PSRenderTargetConstantBuffer
+{
+	XMFLOAT4 params; // x: width, y: height
+};
+
 
 void EUTS_ShaderConstants_initialize(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState);
 
@@ -63,6 +69,8 @@ void EUTS_Shader_initialize(EUTS_Shader *shader, EUTS_RenderState *renderState, 
 void EUTS_Shader_finalize(EUTS_Shader *shader);
 
 void EUTS_Shader_bind(EUTS_Shader *shader, EUTS_RenderState *renderState);
+
+void EUTS_ShaderConstants_setRenderTargetParameters(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, float width, float height);
 
 void EUTS_ShaderConstants_setSceneMatrices(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, XMMATRIX *viewMatrix, XMMATRIX *projectionMatrix);
 

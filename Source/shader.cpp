@@ -6,6 +6,7 @@ void EUTS_ShaderConstants_initialize(EUTS_ShaderConstants *constants, EUTS_Rende
 {
 	D3D11_BUFFER_DESC constantBufferDesc;
 	HRESULT result;
+
 	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	constantBufferDesc.ByteWidth = sizeof(EUTS_VSSceneConstantBuffer);
 	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -41,6 +42,15 @@ void EUTS_ShaderConstants_initialize(EUTS_ShaderConstants *constants, EUTS_Rende
 	constantBufferDesc.StructureByteStride = 0;
 
 	result = renderState->device->CreateBuffer(&constantBufferDesc, NULL, &(constants->lightBuffer));
+
+	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	constantBufferDesc.ByteWidth = sizeof(EUTS_PSRenderTargetConstantBuffer);
+	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	constantBufferDesc.MiscFlags = 0;
+	constantBufferDesc.StructureByteStride = 0;
+
+	result = renderState->device->CreateBuffer(&constantBufferDesc, NULL, &(constants->renderTargetBuffer));
 }
 
 void EUTS_ShaderConstants_finalize(EUTS_ShaderConstants *constants)
@@ -299,4 +309,30 @@ void EUTS_ShaderConstants_setLightParameters(EUTS_ShaderConstants *constants, EU
 	bufferNumber = 0;
 
 	renderState->deviceContext->PSSetConstantBuffers(bufferNumber, 1, &(constants->lightBuffer));
+}
+
+void EUTS_ShaderConstants_setRenderTargetParameters(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, float width, float height)
+{
+	HRESULT result;
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	EUTS_PSRenderTargetConstantBuffer *dataPtr;
+	unsigned int bufferNumber;
+	XMMATRIX view, projection;
+
+
+	result = renderState->deviceContext->Map(constants->renderTargetBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	assert(!FAILED(result));
+
+	dataPtr = (EUTS_PSRenderTargetConstantBuffer*)mappedResource.pData;
+	dataPtr->params.x = width;
+	dataPtr->params.y = height;
+	dataPtr->params.z = 0.0f;
+	dataPtr->params.w = 0.0f;
+
+	renderState->deviceContext->Unmap(constants->renderTargetBuffer, 0);
+
+	// Set the position of the constant buffer in the vertex shader
+	bufferNumber = 1;
+
+	renderState->deviceContext->PSSetConstantBuffers(bufferNumber, 1, &(constants->renderTargetBuffer));
 }

@@ -105,7 +105,11 @@
     <ClInclude Include="..\..\..\Source\texture.h" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\..\..\Resources\Shaders\BlurPS.hlsl">
+    <FxCompile Include="..\..\..\Resources\Shaders\BlurHPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="..\..\..\Resources\Shaders\BlurVPS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
     </FxCompile>

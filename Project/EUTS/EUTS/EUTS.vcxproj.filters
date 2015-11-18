@@ -116,7 +116,10 @@
     <FxCompile Include="..\..\..\Resources\Shaders\PostVS.hlsl">
       <Filter>Resources</Filter>
     </FxCompile>
-    <FxCompile Include="..\..\..\Resources\Shaders\BlurPS.hlsl">
+    <FxCompile Include="..\..\..\Resources\Shaders\BlurHPS.hlsl">
+      <Filter>Resources</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\..\Resources\Shaders\BlurVPS.hlsl">
       <Filter>Resources</Filter>
     </FxCompile>
   </ItemGroup>

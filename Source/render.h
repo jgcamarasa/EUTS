@@ -53,7 +53,9 @@ struct EUTS_RenderState
 struct EUTS_RenderTarget
 {
 	ID3D11Texture2D	*texture;
+	ID3D11Texture2D	*depthStencilBuffer;
 	ID3D11RenderTargetView	*view;
+	ID3D11DepthStencilView	*depthStencilView;
 	ID3D11ShaderResourceView *shaderResourceView;
 };
 

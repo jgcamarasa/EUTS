@@ -35,9 +35,10 @@ int main()
 
 	EUTS_Shader shader;
 	EUTS_Shader_initialize(&shader, &renderState, L"../../../Resources/Shaders/TextureVS.hlsl", L"../../../Resources/Shaders/TexturePS.hlsl", SHADER_FLAG_TEXTURE);
-
-	EUTS_Shader fsShader;
-	EUTS_Shader_initialize(&fsShader, &renderState, L"../../../Resources/Shaders/PostVS.hlsl", L"../../../Resources/Shaders/BlurPS.hlsl", SHADER_FLAG_TEXTURE);
+	EUTS_Shader blurHShader;
+	EUTS_Shader_initialize(&blurHShader, &renderState, L"../../../Resources/Shaders/PostVS.hlsl", L"../../../Resources/Shaders/BlurHPS.hlsl", SHADER_FLAG_TEXTURE);
+	EUTS_Shader blurVShader;
+	EUTS_Shader_initialize(&blurVShader, &renderState, L"../../../Resources/Shaders/PostVS.hlsl", L"../../../Resources/Shaders/BlurVPS.hlsl", SHADER_FLAG_TEXTURE);
 	
 	EUTS_Texture islandTexture;
 	EUTS_Texture_load(&islandTexture, &renderState, "../../../Resources/Textures/island.png");
@@ -51,8 +52,12 @@ int main()
 
 	EUTS_RenderTarget renderTarget;
 	EUTS_RenderTarget_initialize(&renderTarget, &renderState, SCREEN_WIDTH, SCREEN_HEIGHT);
+	EUTS_RenderTarget blurTarget;
+	EUTS_RenderTarget_initialize(&blurTarget, &renderState, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	EUTS_DebugRender_initialize(&renderState);
+
+	EUTS_ShaderConstants_setRenderTargetParameters(&shaderConstants, &renderState, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT);
 
 	XMFLOAT4 ambient(0.5, 0.5f, 0.8f, 1.0f);
 	XMFLOAT4 sunDirection(0.0f, 1.f, -1.f, 1.0f);
@@ -102,13 +107,12 @@ int main()
 			EUTS_Camera_setAngles(&camera, cameraRotation, cameraHeight);
 			EUTS_Camera_setDistance(&camera, cameraDistance);
 
-			float color[4] = { 0.5f, 0.8f, 0.0f, 1.0f };
-			renderState.deviceContext->ClearRenderTargetView(renderState.renderTargetView, color);
-			renderState.deviceContext->ClearDepthStencilView(renderState.depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
-			EUTS_Render_beginFrame(&renderState);
-			
+			float color[4] = { 0.5f, 0.8f, 1.0f, 1.0f };
+			//renderState.deviceContext->ClearRenderTargetView(renderState.renderTargetView, color);
+			//renderState.deviceContext->ClearDepthStencilView(renderState.depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 			EUTS_Render_setRenderTarget(&renderState, &renderTarget);
-			EUTS_RenderTarget_clear(&renderTarget, &renderState, 0.0f, 0.0f, 1.0f, 1.0f);
+			EUTS_Render_beginFrame(&renderState);
+			EUTS_RenderTarget_clear(&renderTarget, &renderState, 0.5f, 0.8f, 1.0f, 1.0f);
 
 			EUTS_Camera_update(&camera);
 
@@ -136,17 +140,26 @@ int main()
 			EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
 			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 6.0f), &renderState);
 
-			EUTS_Render_setDefaultRenderTarget(&renderState);
 
+			EUTS_Render_setRenderTarget(&renderState, &blurTarget);
+			EUTS_RenderTarget_clear(&blurTarget, &renderState, 0.5f, 0.8f, 1.0f, 1.0f);
+			//EUTS_Render_setDefaultRenderTarget(&renderState);
 			EUTS_Mesh_bind(&quadMesh, &renderState);
-			EUTS_Shader_bind(&fsShader, &renderState);
+			EUTS_Shader_bind(&blurVShader, &renderState);
 			EUTS_Render_setTexture(&renderState, renderTarget.shaderResourceView);
 			renderState.deviceContext->DrawIndexed(quadMesh.indexCount, 0, 0);
 
-			ImGui_ImplDX11_NewFrame();
+			EUTS_Render_setDefaultRenderTarget(&renderState);
+			renderState.deviceContext->ClearRenderTargetView(renderState.renderTargetView, color);
+			renderState.deviceContext->ClearDepthStencilView(renderState.depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+			EUTS_Shader_bind(&blurHShader, &renderState);
+			EUTS_Render_setTexture(&renderState, blurTarget.shaderResourceView);
+			renderState.deviceContext->DrawIndexed(quadMesh.indexCount, 0, 0);
+
+			//ImGui_ImplDX11_NewFrame();
 			// 1. Show a simple window
 			// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
-			{
+			if(0){
 				ImGui::SliderFloat("Camera Distance", &cameraDistance, 5.0f, 60.0f);
 				ImGui::SliderAngle("Camera Rotation", &cameraRotation);
 				ImGui::SliderAngle("Camera Height", &cameraHeight, -80.0f, 80.0f);
@@ -162,7 +175,7 @@ int main()
 			sunColor.z = guiSunColor[2];
 			
 
-			ImGui::Render();
+			//ImGui::Render();
 			EUTS_Render_endFrame(&renderState);
 		}
 
@@ -170,13 +183,15 @@ int main()
 
 	EUTS_DebugRender_finalize();
 	EUTS_RenderTarget_finalize(&renderTarget);
+	EUTS_RenderTarget_finalize(&blurTarget);
 	EUTS_Texture_delete(&treeTexture);
 	EUTS_Texture_delete(&islandTexture);
 	EUTS_Mesh_finalize(&quadMesh);
 	EUTS_Mesh_finalize(&treeMesh);
 	EUTS_Mesh_finalize(&islandMesh);
 	EUTS_Shader_finalize(&shader);
-	EUTS_Shader_finalize(&fsShader);
+	EUTS_Shader_finalize(&blurHShader);
+	EUTS_Shader_finalize(&blurVShader);
 	EUTS_ShaderConstants_finalize(&shaderConstants);
 	finalizeD3D11(&renderState);
 
