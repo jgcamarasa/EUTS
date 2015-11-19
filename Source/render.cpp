@@ -274,7 +274,7 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
 
-	depthStencilDesc.StencilEnable = true;
+	depthStencilDesc.StencilEnable = false;
 	depthStencilDesc.StencilReadMask = 0xFF;
 	depthStencilDesc.StencilWriteMask = 0xFF;
 
@@ -319,6 +319,20 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 
 	renderState->deviceContext->RSSetState(renderState->rasterState);
 
+	D3D11_BLEND_DESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.AlphaToCoverageEnable = false;
+	desc.RenderTarget[0].BlendEnable = true;
+	desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	renderState->device->CreateBlendState(&desc, &(renderState->blendState));
+	renderState->deviceContext->OMSetBlendState(renderState->blendState, NULL, 0xffffffff);
+
 	viewport.Width = float(window->width);
 	viewport.Height = float(window->height);
 	viewport.MinDepth = 0.0f;
@@ -352,6 +366,7 @@ void EUTS_Render_beginFrame(EUTS_RenderState *renderState)
 {
 	float color[4] = { 0.5f, 0.8f, 1.0f, 1.0f };
 
+	renderState->deviceContext->OMSetBlendState(renderState->blendState, NULL, 0xffffffff);
 	renderState->deviceContext->RSSetState(renderState->rasterState);
 	renderState->deviceContext->OMSetDepthStencilState(renderState->depthStencilState, 1);
 	//renderState->deviceContext->ClearRenderTargetView(renderState->renderTargetView, color);
@@ -378,12 +393,28 @@ void EUTS_Render_setTexture(EUTS_RenderState *renderState, ID3D11ShaderResourceV
 void EUTS_Render_setRenderTarget(EUTS_RenderState *renderState, EUTS_RenderTarget *renderTarget)
 {
 	renderState->deviceContext->OMSetRenderTargets(1, &(renderTarget->view), renderTarget->depthStencilView);
+	EUTS_Render_setViewport(renderState, renderTarget->width, renderTarget->height);
 }
 
 void EUTS_Render_setDefaultRenderTarget(EUTS_RenderState *renderState)
 {
 	renderState->deviceContext->OMSetRenderTargets(1, &(renderState->renderTargetView), renderState->depthStencilView);
+	EUTS_Render_setViewport(renderState, renderState->window->width, renderState->window->height);
 }
+
+void EUTS_Render_setViewport(EUTS_RenderState *renderState, float width, float height)
+{
+	D3D11_VIEWPORT viewport;
+	viewport.Width = float(width);
+	viewport.Height = float(height);
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+	renderState->deviceContext->RSSetViewports(1, &viewport);
+}
+
+
 
 void EUTS_RenderTarget_initialize(EUTS_RenderTarget *renderTarget, EUTS_RenderState *state, int width, int height)
 {
@@ -450,6 +481,9 @@ void EUTS_RenderTarget_initialize(EUTS_RenderTarget *renderTarget, EUTS_RenderSt
 
 	result = state->device->CreateShaderResourceView((renderTarget->texture), &shaderResourceViewDesc, &(renderTarget->shaderResourceView));
 	assert(!FAILED(result));
+
+	renderTarget->width = width;
+	renderTarget->height = height;
 }
 
 void EUTS_RenderTarget_finalize(EUTS_RenderTarget *renderTarget)

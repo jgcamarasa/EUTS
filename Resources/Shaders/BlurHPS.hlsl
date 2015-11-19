@@ -25,6 +25,6 @@ float4 main(PixelInput input) : SV_TARGET
 	float4 c3 = shaderTexture.Sample(samplerState, input.texCoord - float2(1.0*pW, 0.0f));
 	float4 c4 = shaderTexture.Sample(samplerState, input.texCoord - float2(2.0*pW, 0.0f));
 	output = c0 * kernel[0] + c1 * kernel[1] + c2 * kernel[2] + c3 * kernel[3] + c4 * kernel[4];
-	output.a = 1.0f;
+
 	return output;
 }

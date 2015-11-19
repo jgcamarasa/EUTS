@@ -43,6 +43,7 @@ struct EUTS_RenderState
 	ID3D11DepthStencilState *depthStencilState;
 	ID3D11DepthStencilView	*depthStencilView;
 	ID3D11RasterizerState	*rasterState;
+	ID3D11BlendState		*blendState;
 	XMMATRIX				projectionMatrix;
 	XMMATRIX				modelMatrix;
 	EUTS_Window				*window; // This struct DOESN'T have the ownership of this
@@ -57,6 +58,8 @@ struct EUTS_RenderTarget
 	ID3D11RenderTargetView	*view;
 	ID3D11DepthStencilView	*depthStencilView;
 	ID3D11ShaderResourceView *shaderResourceView;
+	float width;
+	float height;
 };
 
 void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState);
@@ -72,6 +75,8 @@ void EUTS_Render_setTexture(EUTS_RenderState *renderState, ID3D11ShaderResourceV
 void EUTS_Render_setRenderTarget(EUTS_RenderState *renderState, EUTS_RenderTarget *renderTarget);
 
 void EUTS_Render_setDefaultRenderTarget(EUTS_RenderState *renderState);
+
+void EUTS_Render_setViewport(EUTS_RenderState *renderState, float width, float height);
 
 
 void EUTS_RenderTarget_initialize(EUTS_RenderTarget *renderTarget, EUTS_RenderState *state, int width, int height);
