@@ -53,7 +53,7 @@ int main()
 	EUTS_RenderTarget renderTarget;
 	EUTS_RenderTarget_initialize(&renderTarget, &renderState, SCREEN_WIDTH, SCREEN_HEIGHT);
 	EUTS_RenderTarget blurTarget;
-	EUTS_RenderTarget_initialize(&blurTarget, &renderState, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+	EUTS_RenderTarget_initialize(&blurTarget, &renderState, BLUR_WIDTH, BLUR_HEIGHT);
 
 	EUTS_DebugRender_initialize(&renderState);
 
@@ -140,7 +140,7 @@ int main()
 
 
 			EUTS_Render_setRenderTarget(&renderState, &blurTarget);
-			EUTS_ShaderConstants_setRenderTargetParameters(&shaderConstants, &renderState, (float)SCREEN_WIDTH / 2.0f, (float)SCREEN_HEIGHT / 2.0f);
+			EUTS_ShaderConstants_setRenderTargetParameters(&shaderConstants, &renderState, (float)BLUR_WIDTH, (float)BLUR_HEIGHT);
 			EUTS_RenderTarget_clear(&blurTarget, &renderState, 0.5f, 0.8f, 1.0f, 1.0f);
 			EUTS_Mesh_bind(&quadMesh, &renderState);
 			EUTS_Shader_bind(&blurVShader, &renderState);

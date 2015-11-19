@@ -18,6 +18,8 @@ const float SCREEN_NEAR = 0.1f;
 const float SCREEN_DEPTH = 1000.0f;
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 768;
+const int BLUR_WIDTH = SCREEN_WIDTH / 4;
+const int BLUR_HEIGHT = SCREEN_HEIGHT / 4;
 
 
 struct EUTS_Window
