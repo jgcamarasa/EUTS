@@ -51,13 +51,13 @@ int main()
 	EUTS_Camera_setAngles(&camera, 1.0f, 0.7f);
 
 	EUTS_RenderTarget renderTarget;
-	EUTS_RenderTarget_initialize(&renderTarget, &renderState, SCREEN_WIDTH, SCREEN_HEIGHT);
+	EUTS_RenderTarget_initialize(&renderTarget, &renderState, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
 	EUTS_RenderTarget blurTarget;
-	EUTS_RenderTarget_initialize(&blurTarget, &renderState, SCREEN_WIDTH, SCREEN_HEIGHT);
+	EUTS_RenderTarget_initialize(&blurTarget, &renderState, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
 
 	EUTS_DebugRender_initialize(&renderState);
 
-	EUTS_ShaderConstants_setRenderTargetParameters(&shaderConstants, &renderState, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT);
+	EUTS_ShaderConstants_setRenderTargetParameters(&shaderConstants, &renderState, (float)SCREEN_WIDTH / 2.0f, (float)SCREEN_HEIGHT / 2.0f);
 
 	XMFLOAT4 ambient(0.5, 0.5f, 0.8f, 1.0f);
 	XMFLOAT4 sunDirection(0.0f, 1.f, -1.f, 1.0f);
@@ -108,8 +108,7 @@ int main()
 			EUTS_Camera_setDistance(&camera, cameraDistance);
 
 			float color[4] = { 0.5f, 0.8f, 1.0f, 1.0f };
-			//renderState.deviceContext->ClearRenderTargetView(renderState.renderTargetView, color);
-			//renderState.deviceContext->ClearDepthStencilView(renderState.depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+			// Main render target
 			EUTS_Render_setRenderTarget(&renderState, &renderTarget);
 			EUTS_Render_beginFrame(&renderState);
 			EUTS_RenderTarget_clear(&renderTarget, &renderState, 0.5f, 0.8f, 1.0f, 1.0f);
@@ -143,7 +142,6 @@ int main()
 
 			EUTS_Render_setRenderTarget(&renderState, &blurTarget);
 			EUTS_RenderTarget_clear(&blurTarget, &renderState, 0.5f, 0.8f, 1.0f, 1.0f);
-			//EUTS_Render_setDefaultRenderTarget(&renderState);
 			EUTS_Mesh_bind(&quadMesh, &renderState);
 			EUTS_Shader_bind(&blurVShader, &renderState);
 			EUTS_Render_setTexture(&renderState, renderTarget.shaderResourceView);
