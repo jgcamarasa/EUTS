@@ -72,7 +72,9 @@ void EUTS_Render_beginFrame(EUTS_RenderState *renderState);
 
 void EUTS_Render_endFrame(EUTS_RenderState *renderState);
 
-void EUTS_Render_setTexture(EUTS_RenderState *renderState, ID3D11ShaderResourceView* texture); // Todo: More textures?
+void EUTS_Render_bindTexture(EUTS_RenderState *renderState, ID3D11ShaderResourceView* texture, int index); 
+
+void EUTS_Render_unbindTexture(EUTS_RenderState *renderState, int index);
 
 void EUTS_Render_setRenderTarget(EUTS_RenderState *renderState, EUTS_RenderTarget *renderTarget);
 

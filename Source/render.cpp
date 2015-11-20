@@ -385,9 +385,15 @@ void EUTS_Render_endFrame(EUTS_RenderState *renderState)
 	}
 }
 
-void EUTS_Render_setTexture(EUTS_RenderState *renderState, ID3D11ShaderResourceView* texture)
+void EUTS_Render_bindTexture(EUTS_RenderState *renderState, ID3D11ShaderResourceView* texture, int index)
 {
-	renderState->deviceContext->PSSetShaderResources(0, 1, &texture);
+	renderState->deviceContext->PSSetShaderResources(index, 1, &texture);
+}
+
+void EUTS_Render_unbindTexture(EUTS_RenderState *renderState, int index)
+{
+	ID3D11ShaderResourceView *nullArray = { NULL };
+	renderState->deviceContext->PSSetShaderResources(index, 1, &nullArray);
 }
 
 void EUTS_Render_setRenderTarget(EUTS_RenderState *renderState, EUTS_RenderTarget *renderTarget)

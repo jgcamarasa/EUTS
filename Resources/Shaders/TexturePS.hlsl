@@ -1,7 +1,7 @@
 #include "PixelConstants.hlsli"
 
-Texture2D shaderTexture;
-SamplerState samplerState;
+Texture2D shaderTexture : register(t0);
+SamplerState samplerState : register(s0);
 
 struct PixelInput
 {

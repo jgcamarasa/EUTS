@@ -134,10 +134,10 @@ int main()
 			EUTS_ShaderConstants_setLightParameters(&shaderConstants, &renderState, &sunDirection, &sunColor, &ambient);
 
 			EUTS_Mesh_bind(&treeMesh, &renderState);
-			EUTS_Render_setTexture(&renderState, treeTexture.textureView);
+			EUTS_Render_bindTexture(&renderState, treeTexture.textureView, 0);
 			renderState.deviceContext->DrawIndexed(treeMesh.indexCount, 0, 0);
 			EUTS_Mesh_bind(&islandMesh, &renderState);
-			EUTS_Render_setTexture(&renderState, islandTexture.textureView);
+			EUTS_Render_bindTexture(&renderState, islandTexture.textureView, 0);
 			renderState.deviceContext->DrawIndexed(islandMesh.indexCount, 0, 0);
 
 			EUTS_ShaderConstants_setModelMatrix(&shaderConstants, &renderState, &XMMatrixIdentity());
@@ -155,7 +155,7 @@ int main()
 				EUTS_RenderTarget_clear(&blurTarget, &renderState, 0.5f, 0.8f, 1.0f, 1.0f);
 				EUTS_Mesh_bind(&quadMesh, &renderState);
 				EUTS_Shader_bind(&blurVShader, &renderState);
-				EUTS_Render_setTexture(&renderState, renderTarget.shaderResourceView);
+				EUTS_Render_bindTexture(&renderState, renderTarget.shaderResourceView, 0);
 				renderState.deviceContext->DrawIndexed(quadMesh.indexCount, 0, 0);
 
 				EUTS_Render_setDefaultRenderTarget(&renderState);
@@ -164,8 +164,11 @@ int main()
 				renderState.deviceContext->ClearRenderTargetView(renderState.renderTargetView, color);
 				renderState.deviceContext->ClearDepthStencilView(renderState.depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 				EUTS_Shader_bind(&blurHShader, &renderState);
-				EUTS_Render_setTexture(&renderState, blurTarget.shaderResourceView);
+
+				EUTS_Render_bindTexture(&renderState, blurTarget.shaderResourceView, 0);
+				EUTS_Render_bindTexture(&renderState, renderTarget.shaderResourceView, 1);
 				renderState.deviceContext->DrawIndexed(quadMesh.indexCount, 0, 0);
+				EUTS_Render_unbindTexture(&renderState, 1);
 			}
 
 			if (showDebugGui)

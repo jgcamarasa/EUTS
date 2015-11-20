@@ -1,7 +1,7 @@
 #include "PixelConstants.hlsli"
 
-Texture2D shaderTexture;
-SamplerState samplerState;
+Texture2D shaderTexture : register(t0);
+SamplerState samplerState : register(s0);
 
 static const float kernel[5] = {
 	0.0545f, 0.2442f, 0.4026f, 0.2442f, 0.0545f
