@@ -369,7 +369,7 @@ void EUTS_Render_beginFrame(EUTS_RenderState *renderState)
 	renderState->deviceContext->OMSetBlendState(renderState->blendState, NULL, 0xffffffff);
 	renderState->deviceContext->RSSetState(renderState->rasterState);
 	renderState->deviceContext->OMSetDepthStencilState(renderState->depthStencilState, 1);
-	//renderState->deviceContext->ClearRenderTargetView(renderState->renderTargetView, color);
+	renderState->deviceContext->ClearRenderTargetView(renderState->renderTargetView, color);
 	renderState->deviceContext->ClearDepthStencilView(renderState->depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }
 

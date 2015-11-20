@@ -70,6 +70,9 @@ int main()
 	guiSunColor[1] = sunColor.y;
 	guiSunColor[2] = sunColor.z;
 
+	bool showDebugGui = true;
+	bool depthOfField = true;
+
 	// Loop
 	MSG msg;
 	bool done;
@@ -107,7 +110,14 @@ int main()
 
 			float color[4] = { 0.5f, 0.8f, 1.0f, 1.0f };
 			// Main render target
-			EUTS_Render_setRenderTarget(&renderState, &renderTarget);
+			if (depthOfField)
+			{
+				EUTS_Render_setRenderTarget(&renderState, &renderTarget);
+			}
+			else
+			{
+				EUTS_Render_setDefaultRenderTarget(&renderState);
+			}
 			EUTS_ShaderConstants_setRenderTargetParameters(&shaderConstants, &renderState, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT);
 			EUTS_Render_beginFrame(&renderState);
 			EUTS_RenderTarget_clear(&renderTarget, &renderState, 0.5f, 0.8f, 1.0f, 1.0f);
@@ -138,34 +148,44 @@ int main()
 			EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
 			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 6.0f), &renderState);
 
-
-			EUTS_Render_setRenderTarget(&renderState, &blurTarget);
-			EUTS_ShaderConstants_setRenderTargetParameters(&shaderConstants, &renderState, (float)BLUR_WIDTH, (float)BLUR_HEIGHT);
-			EUTS_RenderTarget_clear(&blurTarget, &renderState, 0.5f, 0.8f, 1.0f, 1.0f);
-			EUTS_Mesh_bind(&quadMesh, &renderState);
-			EUTS_Shader_bind(&blurVShader, &renderState);
-			EUTS_Render_setTexture(&renderState, renderTarget.shaderResourceView);
-			renderState.deviceContext->DrawIndexed(quadMesh.indexCount, 0, 0);
-
-			EUTS_Render_setDefaultRenderTarget(&renderState);
-			//renderState.deviceContext->RSSetState(renderState.rasterState);
-			//renderState.deviceContext->OMSetDepthStencilState(renderState.depthStencilState, 1);
-			renderState.deviceContext->ClearRenderTargetView(renderState.renderTargetView, color);
-			renderState.deviceContext->ClearDepthStencilView(renderState.depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
-			EUTS_Shader_bind(&blurHShader, &renderState);
-			EUTS_Render_setTexture(&renderState, blurTarget.shaderResourceView);
-			renderState.deviceContext->DrawIndexed(quadMesh.indexCount, 0, 0);
-
-			ImGui_ImplDX11_NewFrame();
-			// 1. Show a simple window
-			// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
+			if (depthOfField)
 			{
-				ImGui::SliderFloat("Camera Distance", &cameraDistance, 5.0f, 60.0f);
-				ImGui::SliderAngle("Camera Rotation", &cameraRotation);
-				ImGui::SliderAngle("Camera Height", &cameraHeight, -80.0f, 80.0f);
-				ImGui::SliderFloat3("Sun Direction", guiSunDirection, -1.0f, 1.0f);
-				ImGui::ColorEdit3("Sun Color", guiSunColor);
-				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+				EUTS_Render_setRenderTarget(&renderState, &blurTarget);
+				EUTS_ShaderConstants_setRenderTargetParameters(&shaderConstants, &renderState, (float)BLUR_WIDTH, (float)BLUR_HEIGHT);
+				EUTS_RenderTarget_clear(&blurTarget, &renderState, 0.5f, 0.8f, 1.0f, 1.0f);
+				EUTS_Mesh_bind(&quadMesh, &renderState);
+				EUTS_Shader_bind(&blurVShader, &renderState);
+				EUTS_Render_setTexture(&renderState, renderTarget.shaderResourceView);
+				renderState.deviceContext->DrawIndexed(quadMesh.indexCount, 0, 0);
+
+				EUTS_Render_setDefaultRenderTarget(&renderState);
+				//renderState.deviceContext->RSSetState(renderState.rasterState);
+				//renderState.deviceContext->OMSetDepthStencilState(renderState.depthStencilState, 1);
+				renderState.deviceContext->ClearRenderTargetView(renderState.renderTargetView, color);
+				renderState.deviceContext->ClearDepthStencilView(renderState.depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+				EUTS_Shader_bind(&blurHShader, &renderState);
+				EUTS_Render_setTexture(&renderState, blurTarget.shaderResourceView);
+				renderState.deviceContext->DrawIndexed(quadMesh.indexCount, 0, 0);
+			}
+
+			if (showDebugGui)
+			{
+				ImGui_ImplDX11_NewFrame();
+				{
+					ImGui::Begin("Camera", 0, 0);
+					ImGui::SliderFloat("Camera Distance", &cameraDistance, 5.0f, 60.0f);
+					ImGui::SliderAngle("Camera Rotation", &cameraRotation);
+					ImGui::SliderAngle("Camera Height", &cameraHeight, -80.0f, 80.0f);
+					ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+					ImGui::End();
+				}
+				{
+					ImGui::Begin("Graphics", 0, 0);
+					ImGui::SliderFloat3("Sun Direction", guiSunDirection, -1.0f, 1.0f);
+					ImGui::ColorEdit3("Sun Color", guiSunColor);
+					ImGui::Checkbox("Depth Of Field", &depthOfField);
+					ImGui::End();
+				}
 			}
 			sunDirection.x = guiSunDirection[0];
 			sunDirection.y = guiSunDirection[1];
