@@ -105,8 +105,17 @@ int main()
 			static float cameraDistance = 50.0f;
 			static float cameraHeight = 0.7f;
 			static float cameraRotation = 1.0f;
+			static bool  cameraAutoRotate = true;
 			EUTS_Camera_setAngles(&camera, cameraRotation, cameraHeight);
 			EUTS_Camera_setDistance(&camera, cameraDistance);
+			if (cameraAutoRotate)
+			{
+				cameraRotation += 0.005f;
+				if (cameraRotation > 3.14159)
+				{
+					cameraRotation = -3.14159;
+				}
+			}
 
 			float color[4] = { 0.5f, 0.8f, 1.0f, 1.0f };
 			// Main render target
@@ -177,9 +186,9 @@ int main()
 				{
 					ImGui::Begin("Camera", 0, 0);
 					ImGui::SliderFloat("Camera Distance", &cameraDistance, 5.0f, 60.0f);
-					ImGui::SliderAngle("Camera Rotation", &cameraRotation);
+					ImGui::SliderAngle("Camera Rotation", &cameraRotation, -180.0f, 180.0f);
 					ImGui::SliderAngle("Camera Height", &cameraHeight, -80.0f, 80.0f);
-					ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+					ImGui::Checkbox("Auto Rotate", &cameraAutoRotate);
 					ImGui::End();
 				}
 				{
@@ -187,6 +196,12 @@ int main()
 					ImGui::SliderFloat3("Sun Direction", guiSunDirection, -1.0f, 1.0f);
 					ImGui::ColorEdit3("Sun Color", guiSunColor);
 					ImGui::Checkbox("Depth Of Field", &depthOfField);
+					ImGui::End();
+				}
+				{
+					ImGui::Begin("Profiling", 0, 0);
+					ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+					ImGui::Text("Total Video Memory: %f MB", renderState.videoMemoryInMB);
 					ImGui::End();
 				}
 			}
