@@ -311,7 +311,7 @@ void EUTS_ShaderConstants_setLightParameters(EUTS_ShaderConstants *constants, EU
 	renderState->deviceContext->PSSetConstantBuffers(bufferNumber, 1, &(constants->lightBuffer));
 }
 
-void EUTS_ShaderConstants_setRenderTargetParameters(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, float width, float height)
+void EUTS_ShaderConstants_setRenderTargetParameters(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, float width, float height, float glowIntensity)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -326,7 +326,7 @@ void EUTS_ShaderConstants_setRenderTargetParameters(EUTS_ShaderConstants *consta
 	dataPtr = (EUTS_PSRenderTargetConstantBuffer*)mappedResource.pData;
 	dataPtr->params.x = width;
 	dataPtr->params.y = height;
-	dataPtr->params.z = 0.0f;
+	dataPtr->params.z = glowIntensity;
 	dataPtr->params.w = 0.0f;
 
 	renderState->deviceContext->Unmap(constants->renderTargetBuffer, 0);

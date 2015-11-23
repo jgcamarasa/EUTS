@@ -38,7 +38,7 @@ float4 main(PixelInput input) : SV_TARGET
 	r = abs(r);
 	r = clamp(r, 0.0f, 1.0f);
 
-	output = blurred*r + scene*(1.0f - r);
+	output = float4(blurred.rgb*blurred.a*renderTargetParams.z + scene.rgb, 1.0f);
 	//output = float4(r, 0.0f, 0.0f, 1.0f);
 	return output;
 }

@@ -23,6 +23,6 @@ float4 main(PixelInput input) : SV_TARGET
 	
 	saturate(lightOutput);
 
-	float4 output = float4(lightOutput, 1.0f) * texValue;
+	float4 output = float4(lightOutput, 0.0f) * texValue;
 	return output;
 }

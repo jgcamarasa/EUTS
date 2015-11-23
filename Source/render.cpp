@@ -322,7 +322,7 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 	D3D11_BLEND_DESC desc;
 	ZeroMemory(&desc, sizeof(desc));
 	desc.AlphaToCoverageEnable = false;
-	desc.RenderTarget[0].BlendEnable = true;
+	desc.RenderTarget[0].BlendEnable = false;
 	desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
 	desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 	desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;

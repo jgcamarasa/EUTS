@@ -7,5 +7,5 @@ cbuffer LightConstants : register(b0)
 
 cbuffer RenderTargetConstants : register(b1)
 {
-	float4 renderTargetParams; // w, h
+	float4 renderTargetParams; // w, h, glow intensity
 };

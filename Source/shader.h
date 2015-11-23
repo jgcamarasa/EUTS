@@ -70,7 +70,7 @@ void EUTS_Shader_finalize(EUTS_Shader *shader);
 
 void EUTS_Shader_bind(EUTS_Shader *shader, EUTS_RenderState *renderState);
 
-void EUTS_ShaderConstants_setRenderTargetParameters(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, float width, float height);
+void EUTS_ShaderConstants_setRenderTargetParameters(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, float width, float height, float glowIntensity);
 
 void EUTS_ShaderConstants_setSceneMatrices(EUTS_ShaderConstants *constants, EUTS_RenderState *renderState, XMMATRIX *viewMatrix, XMMATRIX *projectionMatrix);
 

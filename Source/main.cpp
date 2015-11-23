@@ -26,7 +26,7 @@ int main()
 	EUTS_Mesh islandMesh;
 	EUTS_Mesh_load(&islandMesh, &renderState, "../../../Resources/Meshes/island.mesh");
 	EUTS_Mesh treeMesh;
-	EUTS_Mesh_load(&treeMesh, &renderState, "../../../Resources/Meshes/tree.mesh");
+	EUTS_Mesh_load(&treeMesh, &renderState, "../../../Resources/Meshes/tree2.mesh");
 	EUTS_Mesh quadMesh;
 	EUTS_Mesh_loadQuad(&quadMesh, &renderState);
 	
@@ -71,7 +71,8 @@ int main()
 	guiSunColor[2] = sunColor.z;
 
 	bool showDebugGui = true;
-	bool depthOfField = true;
+	bool glow = true;
+	float glowIntensity = 0.5f;
 
 	// Loop
 	MSG msg;
@@ -119,7 +120,7 @@ int main()
 
 			float color[4] = { 0.5f, 0.8f, 1.0f, 1.0f };
 			// Main render target
-			if (depthOfField)
+			if (glow)
 			{
 				EUTS_Render_setRenderTarget(&renderState, &renderTarget);
 			}
@@ -127,7 +128,7 @@ int main()
 			{
 				EUTS_Render_setDefaultRenderTarget(&renderState);
 			}
-			EUTS_ShaderConstants_setRenderTargetParameters(&shaderConstants, &renderState, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT);
+			EUTS_ShaderConstants_setRenderTargetParameters(&shaderConstants, &renderState, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT, glowIntensity);
 			EUTS_Render_beginFrame(&renderState);
 			EUTS_RenderTarget_clear(&renderTarget, &renderState, 0.5f, 0.8f, 1.0f, 1.0f);
 
@@ -157,10 +158,10 @@ int main()
 			EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
 			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 6.0f), &renderState);
 
-			if (depthOfField)
+			if (glow)
 			{
 				EUTS_Render_setRenderTarget(&renderState, &blurTarget);
-				EUTS_ShaderConstants_setRenderTargetParameters(&shaderConstants, &renderState, (float)BLUR_WIDTH, (float)BLUR_HEIGHT);
+				EUTS_ShaderConstants_setRenderTargetParameters(&shaderConstants, &renderState, (float)BLUR_WIDTH, (float)BLUR_HEIGHT, glowIntensity);
 				EUTS_RenderTarget_clear(&blurTarget, &renderState, 0.5f, 0.8f, 1.0f, 1.0f);
 				EUTS_Mesh_bind(&quadMesh, &renderState);
 				EUTS_Shader_bind(&blurVShader, &renderState);
@@ -195,7 +196,8 @@ int main()
 					ImGui::Begin("Graphics", 0, 0);
 					ImGui::SliderFloat3("Sun Direction", guiSunDirection, -1.0f, 1.0f);
 					ImGui::ColorEdit3("Sun Color", guiSunColor);
-					ImGui::Checkbox("Depth Of Field", &depthOfField);
+					ImGui::Checkbox("Glow", &glow);
+					ImGui::SliderFloat("Glow Intensity", &glowIntensity, 0.5f, 1.5f);
 					ImGui::End();
 				}
 				{
