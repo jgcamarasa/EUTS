@@ -2,11 +2,19 @@
 #include "imgui\imgui.h"
 #include "imgui_impl_dx11.h"
 
+bool showDebugGui;
+
 extern LRESULT ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
 	HDC hdc;
+
+	if (message == WM_KEYDOWN  && wParam == 112)
+	{
+		showDebugGui = !showDebugGui;
+	}
+
 
 	if (ImGui_ImplDX11_WndProcHandler(hWnd, message, wParam, lParam))
 		return true;
@@ -253,21 +261,7 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 
 	backBufferPtr->Release();
 
-	ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
-	depthBufferDesc.Width = window->width;
-	depthBufferDesc.Height = window->height;
-	depthBufferDesc.MipLevels = 1;
-	depthBufferDesc.ArraySize = 1;
-	depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthBufferDesc.SampleDesc.Count = 1;
-	depthBufferDesc.SampleDesc.Quality = 0;
-	depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-	depthBufferDesc.CPUAccessFlags = 0;
-	depthBufferDesc.MiscFlags = 0;
-
-	result = renderState->device->CreateTexture2D(&depthBufferDesc, NULL, &(renderState->depthStencilBuffer));
-	assert(!FAILED(result));
+	EUTS_DepthBuffer_initialize(&(renderState->depthBuffer), renderState, window->width, window->height);
 
 	ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
 	depthStencilDesc.DepthEnable = true;
@@ -293,15 +287,7 @@ void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState)
 
 	renderState->deviceContext->OMSetDepthStencilState(renderState->depthStencilState, 1);
 
-	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
-	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-	depthStencilViewDesc.Texture2D.MipSlice = 0;
-
-	result = renderState->device->CreateDepthStencilView(renderState->depthStencilBuffer, &depthStencilViewDesc, &(renderState->depthStencilView));
-	assert(!FAILED(result));
-
-	renderState->deviceContext->OMSetRenderTargets(1, &(renderState->renderTargetView), renderState->depthStencilView);
+	renderState->deviceContext->OMSetRenderTargets(1, &(renderState->renderTargetView), renderState->depthBuffer.view);
 
 	rasterDesc.AntialiasedLineEnable = false;
 	rasterDesc.CullMode = D3D11_CULL_BACK;
@@ -353,9 +339,8 @@ void finalizeD3D11(EUTS_RenderState *renderState)
 {
 	renderState->swapChain->SetFullscreenState(false, NULL);
 	renderState->rasterState->Release();
-	renderState->depthStencilView->Release();
 	renderState->depthStencilState->Release();
-	renderState->depthStencilBuffer->Release();
+	EUTS_DepthBuffer_finalize(&(renderState->depthBuffer));
 	renderState->renderTargetView->Release();
 	renderState->deviceContext->Release();
 	renderState->device->Release();
@@ -370,7 +355,7 @@ void EUTS_Render_beginFrame(EUTS_RenderState *renderState)
 	renderState->deviceContext->RSSetState(renderState->rasterState);
 	renderState->deviceContext->OMSetDepthStencilState(renderState->depthStencilState, 1);
 	renderState->deviceContext->ClearRenderTargetView(renderState->renderTargetView, color);
-	renderState->deviceContext->ClearDepthStencilView(renderState->depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	EUTS_DepthBuffer_clear(&(renderState->depthBuffer), renderState);
 }
 
 void EUTS_Render_endFrame(EUTS_RenderState *renderState)
@@ -396,15 +381,15 @@ void EUTS_Render_unbindTexture(EUTS_RenderState *renderState, int index)
 	renderState->deviceContext->PSSetShaderResources(index, 1, &nullArray);
 }
 
-void EUTS_Render_setRenderTarget(EUTS_RenderState *renderState, EUTS_RenderTarget *renderTarget)
+void EUTS_Render_setRenderTarget(EUTS_RenderState *renderState, EUTS_RenderTarget *renderTarget, EUTS_DepthBuffer *depthBuffer)
 {
-	renderState->deviceContext->OMSetRenderTargets(1, &(renderTarget->view), renderTarget->depthStencilView);
+	renderState->deviceContext->OMSetRenderTargets(1, &(renderTarget->view), depthBuffer->view);
 	EUTS_Render_setViewport(renderState, renderTarget->width, renderTarget->height);
 }
 
 void EUTS_Render_setDefaultRenderTarget(EUTS_RenderState *renderState)
 {
-	renderState->deviceContext->OMSetRenderTargets(1, &(renderState->renderTargetView), renderState->depthStencilView);
+	renderState->deviceContext->OMSetRenderTargets(1, &(renderState->renderTargetView), renderState->depthBuffer.view);
 	EUTS_Render_setViewport(renderState, renderState->window->width, renderState->window->height);
 }
 
@@ -425,9 +410,7 @@ void EUTS_Render_setViewport(EUTS_RenderState *renderState, float width, float h
 void EUTS_RenderTarget_initialize(EUTS_RenderTarget *renderTarget, EUTS_RenderState *state, int width, int height)
 {
 	D3D11_TEXTURE2D_DESC textureDesc;
-	D3D11_TEXTURE2D_DESC depthBufferDesc;
 	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
-	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
 	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
 	HRESULT result;
 
@@ -456,30 +439,6 @@ void EUTS_RenderTarget_initialize(EUTS_RenderTarget *renderTarget, EUTS_RenderSt
 	result = state->device->CreateRenderTargetView(renderTarget->texture, &renderTargetViewDesc, &(renderTarget->view));
 	assert(!FAILED(result));
 
-	ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
-	depthBufferDesc.Width = width;
-	depthBufferDesc.Height = height;
-	depthBufferDesc.MipLevels = 1;
-	depthBufferDesc.ArraySize = 1;
-	depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthBufferDesc.SampleDesc.Count = 1;
-	depthBufferDesc.SampleDesc.Quality = 0;
-	depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-	depthBufferDesc.CPUAccessFlags = 0;
-	depthBufferDesc.MiscFlags = 0;
-
-	result = state->device->CreateTexture2D(&depthBufferDesc, NULL, &(renderTarget->depthStencilBuffer));
-	assert(!FAILED(result));
-
-	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
-	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-	depthStencilViewDesc.Texture2D.MipSlice = 0;
-
-	result = state->device->CreateDepthStencilView(renderTarget->depthStencilBuffer, &depthStencilViewDesc, &(renderTarget->depthStencilView));
-	assert(!FAILED(result));
-
 	shaderResourceViewDesc.Format = textureDesc.Format;
 	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
@@ -495,8 +454,6 @@ void EUTS_RenderTarget_initialize(EUTS_RenderTarget *renderTarget, EUTS_RenderSt
 void EUTS_RenderTarget_finalize(EUTS_RenderTarget *renderTarget)
 {
 	renderTarget->shaderResourceView->Release();
-	renderTarget->depthStencilView->Release();
-	renderTarget->depthStencilBuffer->Release();
 	renderTarget->view->Release();
 	renderTarget->texture->Release();
 }
@@ -510,7 +467,48 @@ void EUTS_RenderTarget_clear(EUTS_RenderTarget *renderTarget, EUTS_RenderState *
 	color[3] = a;
 
 	state->deviceContext->ClearRenderTargetView(renderTarget->view, color);
-	state->deviceContext->ClearDepthStencilView(renderTarget->depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+}
+
+void EUTS_DepthBuffer_initialize(EUTS_DepthBuffer *depthBuffer, EUTS_RenderState *state, int width, int height)
+{
+	D3D11_TEXTURE2D_DESC depthBufferDesc;
+	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+	HRESULT result;
+
+	ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
+	depthBufferDesc.Width = width;
+	depthBufferDesc.Height = height;
+	depthBufferDesc.MipLevels = 1;
+	depthBufferDesc.ArraySize = 1;
+	depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthBufferDesc.SampleDesc.Count = 1;
+	depthBufferDesc.SampleDesc.Quality = 0;
+	depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthBufferDesc.CPUAccessFlags = 0;
+	depthBufferDesc.MiscFlags = 0;
+
+	result = state->device->CreateTexture2D(&depthBufferDesc, NULL, &(depthBuffer->texture));
+	assert(!FAILED(result));
+
+	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
+	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	depthStencilViewDesc.Texture2D.MipSlice = 0;
+
+	result = state->device->CreateDepthStencilView(depthBuffer->texture, &depthStencilViewDesc, &(depthBuffer->view));
+	assert(!FAILED(result));
+}
+
+void EUTS_DepthBuffer_finalize(EUTS_DepthBuffer *depthBuffer)
+{
+	depthBuffer->view->Release();
+	depthBuffer->texture->Release();
+}
+
+void EUTS_DepthBuffer_clear(EUTS_DepthBuffer *depthBuffer, EUTS_RenderState *state)
+{
+	state->deviceContext->ClearDepthStencilView(depthBuffer->view, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }
 
 

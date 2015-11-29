@@ -21,6 +21,7 @@ const int SCREEN_HEIGHT = 768;
 const int BLUR_WIDTH = SCREEN_WIDTH / 16;
 const int BLUR_HEIGHT = SCREEN_HEIGHT / 16;
 
+extern bool showDebugGui;
 
 struct EUTS_Window
 {
@@ -34,6 +35,20 @@ struct EUTS_Window
 
 void initWindow(EUTS_Window *window);
 
+struct EUTS_RenderTarget
+{
+	ID3D11Texture2D	*texture;
+	ID3D11RenderTargetView	*view;
+	ID3D11ShaderResourceView *shaderResourceView;
+	float width;
+	float height;
+};
+
+struct EUTS_DepthBuffer
+{
+	ID3D11Texture2D	*texture;
+	ID3D11DepthStencilView *view;
+};
 
 struct EUTS_RenderState
 {
@@ -41,9 +56,8 @@ struct EUTS_RenderState
 	ID3D11Device			*device;
 	ID3D11DeviceContext		*deviceContext;
 	ID3D11RenderTargetView	*renderTargetView;
-	ID3D11Texture2D			*depthStencilBuffer;
 	ID3D11DepthStencilState *depthStencilState;
-	ID3D11DepthStencilView	*depthStencilView;
+	EUTS_DepthBuffer		 depthBuffer;
 	ID3D11RasterizerState	*rasterState;
 	ID3D11BlendState		*blendState;
 	XMMATRIX				projectionMatrix;
@@ -53,16 +67,7 @@ struct EUTS_RenderState
 	char					videoCardDescription[128];
 };
 
-struct EUTS_RenderTarget
-{
-	ID3D11Texture2D	*texture;
-	ID3D11Texture2D	*depthStencilBuffer;
-	ID3D11RenderTargetView	*view;
-	ID3D11DepthStencilView	*depthStencilView;
-	ID3D11ShaderResourceView *shaderResourceView;
-	float width;
-	float height;
-};
+
 
 void initD3D11(EUTS_Window *window, EUTS_RenderState *renderState);
 
@@ -76,18 +81,23 @@ void EUTS_Render_bindTexture(EUTS_RenderState *renderState, ID3D11ShaderResource
 
 void EUTS_Render_unbindTexture(EUTS_RenderState *renderState, int index);
 
-void EUTS_Render_setRenderTarget(EUTS_RenderState *renderState, EUTS_RenderTarget *renderTarget);
+void EUTS_Render_setRenderTarget(EUTS_RenderState *renderState, EUTS_RenderTarget *renderTarget, EUTS_DepthBuffer *depthBuffer);
 
 void EUTS_Render_setDefaultRenderTarget(EUTS_RenderState *renderState);
 
 void EUTS_Render_setViewport(EUTS_RenderState *renderState, float width, float height);
-
 
 void EUTS_RenderTarget_initialize(EUTS_RenderTarget *renderTarget, EUTS_RenderState *state, int width, int height);
 
 void EUTS_RenderTarget_finalize(EUTS_RenderTarget *renderTarget);
 
 void EUTS_RenderTarget_clear(EUTS_RenderTarget *renderTarget, EUTS_RenderState *state, float r, float g, float b, float a);
+
+void EUTS_DepthBuffer_initialize(EUTS_DepthBuffer *depthBuffer, EUTS_RenderState *state, int width, int height);
+
+void EUTS_DepthBuffer_finalize(EUTS_DepthBuffer *depthBuffer);
+
+void EUTS_DepthBuffer_clear(EUTS_DepthBuffer *depthBuffer, EUTS_RenderState *state);
 
 
 struct EUTS_Camera

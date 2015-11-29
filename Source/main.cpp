@@ -14,6 +14,8 @@
 #include <imgui.h>
 #include "imgui_impl_dx11.h"
 
+
+
 int main()
 {
 
@@ -47,13 +49,16 @@ int main()
 	
 	EUTS_Camera camera;
 	EUTS_Camera_setDistance(&camera, 40.0f);
-	EUTS_Camera_setTarget(&camera, 0.0f, 0.0f, 0.0f);
+	EUTS_Camera_setTarget(&camera, 0.0f, 8.0f, 0.0f);
 	EUTS_Camera_setAngles(&camera, 1.0f, 0.7f);
 
 	EUTS_RenderTarget renderTarget;
 	EUTS_RenderTarget_initialize(&renderTarget, &renderState, SCREEN_WIDTH, SCREEN_HEIGHT);
 	EUTS_RenderTarget blurTarget;
 	EUTS_RenderTarget_initialize(&blurTarget, &renderState, BLUR_WIDTH, BLUR_HEIGHT);
+
+	EUTS_DepthBuffer blurDepth;
+	EUTS_DepthBuffer_initialize(&blurDepth, &renderState, BLUR_WIDTH, BLUR_HEIGHT);
 
 	EUTS_DebugRender_initialize(&renderState);
 
@@ -70,9 +75,9 @@ int main()
 	guiSunColor[1] = sunColor.y;
 	guiSunColor[2] = sunColor.z;
 
-	bool showDebugGui = true;
 	bool glow = true;
 	float glowIntensity = 0.5f;
+	showDebugGui = true;
 
 	// Loop
 	MSG msg;
@@ -122,7 +127,7 @@ int main()
 			// Main render target
 			if (glow)
 			{
-				EUTS_Render_setRenderTarget(&renderState, &renderTarget);
+				EUTS_Render_setRenderTarget(&renderState, &renderTarget, &(renderState.depthBuffer));
 			}
 			else
 			{
@@ -160,9 +165,10 @@ int main()
 
 			if (glow)
 			{
-				EUTS_Render_setRenderTarget(&renderState, &blurTarget);
+				EUTS_Render_setRenderTarget(&renderState, &blurTarget, &blurDepth);
 				EUTS_ShaderConstants_setRenderTargetParameters(&shaderConstants, &renderState, (float)BLUR_WIDTH, (float)BLUR_HEIGHT, glowIntensity);
 				EUTS_RenderTarget_clear(&blurTarget, &renderState, 0.5f, 0.8f, 1.0f, 1.0f);
+				EUTS_DepthBuffer_clear(&blurDepth, &renderState);
 				EUTS_Mesh_bind(&quadMesh, &renderState);
 				EUTS_Shader_bind(&blurVShader, &renderState);
 				EUTS_Render_bindTexture(&renderState, renderTarget.shaderResourceView, 0);
@@ -172,7 +178,7 @@ int main()
 				//renderState.deviceContext->RSSetState(renderState.rasterState);
 				//renderState.deviceContext->OMSetDepthStencilState(renderState.depthStencilState, 1);
 				renderState.deviceContext->ClearRenderTargetView(renderState.renderTargetView, color);
-				renderState.deviceContext->ClearDepthStencilView(renderState.depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+				renderState.deviceContext->ClearDepthStencilView(renderState.depthBuffer.view, D3D11_CLEAR_DEPTH, 1.0f, 0);
 				EUTS_Shader_bind(&blurHShader, &renderState);
 
 				EUTS_Render_bindTexture(&renderState, blurTarget.shaderResourceView, 0);
@@ -206,22 +212,24 @@ int main()
 					ImGui::Text("Total Video Memory: %f MB", renderState.videoMemoryInMB);
 					ImGui::End();
 				}
-			}
-			sunDirection.x = guiSunDirection[0];
-			sunDirection.y = guiSunDirection[1];
-			sunDirection.z = guiSunDirection[2];
-			sunColor.x = guiSunColor[0];
-			sunColor.y = guiSunColor[1];
-			sunColor.z = guiSunColor[2];
+			
+				sunDirection.x = guiSunDirection[0];
+				sunDirection.y = guiSunDirection[1];
+				sunDirection.z = guiSunDirection[2];
+				sunColor.x = guiSunColor[0];
+				sunColor.y = guiSunColor[1];
+				sunColor.z = guiSunColor[2];
 			
 
-			ImGui::Render();
+				ImGui::Render();
+			}
 			EUTS_Render_endFrame(&renderState);
 		}
 
 	}
 
 	EUTS_DebugRender_finalize();
+	EUTS_DepthBuffer_finalize(&blurDepth);
 	EUTS_RenderTarget_finalize(&renderTarget);
 	EUTS_RenderTarget_finalize(&blurTarget);
 	EUTS_Texture_delete(&treeTexture);
