@@ -13,7 +13,7 @@
 #include "debug_render.h"
 #include <imgui.h>
 #include "imgui_impl_dx11.h"
-
+#include "light.h"
 
 
 int main()
@@ -56,24 +56,28 @@ int main()
 	EUTS_RenderTarget_initialize(&renderTarget, &renderState, SCREEN_WIDTH, SCREEN_HEIGHT);
 	EUTS_RenderTarget blurTarget;
 	EUTS_RenderTarget_initialize(&blurTarget, &renderState, BLUR_WIDTH, BLUR_HEIGHT);
+	EUTS_RenderTarget shadowTarget;
+	EUTS_RenderTarget_initialize(&shadowTarget, &renderState, 2048, 2048);
 
 	EUTS_DepthBuffer blurDepth;
 	EUTS_DepthBuffer_initialize(&blurDepth, &renderState, BLUR_WIDTH, BLUR_HEIGHT);
 
 	EUTS_DebugRender_initialize(&renderState);
 
-	XMFLOAT4 ambient(0.5, 0.5f, 0.8f, 1.0f);
-	XMFLOAT4 sunDirection(0.0f, 1.f, -1.f, 1.0f);
-	XMFLOAT4 sunColor(1.0f, 1.0f, 1.0f, 1.0f);
+	EUTS_SunLight sunLight;
+	EUTS_SunLight_setAmbient(&sunLight, 0.5f, 0.5f, 0.8f);
+	EUTS_SunLight_setDirection(&sunLight, 0.0f, 1.f, -1.f);
+	EUTS_SunLight_setDiffuse(&sunLight, 1.0f, 1.0f, 1.0f);
+
 
 	float guiSunDirection[3];
 	float guiSunColor[3];
-	guiSunDirection[0] = sunDirection.x;
-	guiSunDirection[1] = sunDirection.y;
-	guiSunDirection[2] = sunDirection.z;
-	guiSunColor[0] = sunColor.x;
-	guiSunColor[1] = sunColor.y;
-	guiSunColor[2] = sunColor.z;
+	guiSunDirection[0] = sunLight.direction.x;
+	guiSunDirection[1] = sunLight.direction.y;
+	guiSunDirection[2] = sunLight.direction.z;
+	guiSunColor[0] = sunLight.diffuse.x;
+	guiSunColor[1] = sunLight.diffuse.y;
+	guiSunColor[2] = sunLight.diffuse.z;
 
 	bool glow = true;
 	float glowIntensity = 0.5f;
@@ -106,8 +110,28 @@ int main()
 		}
 		else
 		{
-			// Otherwise do the frame processing.
 
+			// Shadow mapping
+			/*EUTS_ShaderConstants_setSceneMatrices(&shaderConstants, &renderState, &(camera.viewMatrix), &(renderState.projectionMatrix));
+
+			{
+				EUTS_Mesh_bind(&treeMesh, &renderState);
+				EUTS_Render_bindTexture(&renderState, treeTexture.textureView, 0);
+				renderState.deviceContext->DrawIndexed(treeMesh.indexCount, 0, 0);
+				EUTS_Mesh_bind(&islandMesh, &renderState);
+				EUTS_Render_bindTexture(&renderState, islandTexture.textureView, 0);
+				renderState.deviceContext->DrawIndexed(islandMesh.indexCount, 0, 0);
+
+				EUTS_ShaderConstants_setModelMatrix(&shaderConstants, &renderState, &XMMatrixIdentity());
+				EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
+				EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(6.0f, 0.0f, 0.0f), &renderState);
+				EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f));
+				EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 6.0f, 0.0f), &renderState);
+				EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
+				EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 6.0f), &renderState);
+			}*/
+
+			// Otherwise do the frame processing.
 			static float cameraDistance = 50.0f;
 			static float cameraHeight = 0.7f;
 			static float cameraRotation = 1.0f;
@@ -146,22 +170,24 @@ int main()
 			XMMATRIX modelMatrix = XMMatrixRotationAxis(rotVector, rot);
 			rot += 0.00f;
 			EUTS_ShaderConstants_setModelMatrix(&shaderConstants, &renderState, &(modelMatrix));
-			EUTS_ShaderConstants_setLightParameters(&shaderConstants, &renderState, &sunDirection, &sunColor, &ambient);
+			EUTS_ShaderConstants_setLightParameters(&shaderConstants, &renderState, &sunLight.direction, &sunLight.diffuse, &sunLight.ambient);
 
-			EUTS_Mesh_bind(&treeMesh, &renderState);
-			EUTS_Render_bindTexture(&renderState, treeTexture.textureView, 0);
-			renderState.deviceContext->DrawIndexed(treeMesh.indexCount, 0, 0);
-			EUTS_Mesh_bind(&islandMesh, &renderState);
-			EUTS_Render_bindTexture(&renderState, islandTexture.textureView, 0);
-			renderState.deviceContext->DrawIndexed(islandMesh.indexCount, 0, 0);
+			{ // Main scene
+				EUTS_Mesh_bind(&treeMesh, &renderState);
+				EUTS_Render_bindTexture(&renderState, treeTexture.textureView, 0);
+				renderState.deviceContext->DrawIndexed(treeMesh.indexCount, 0, 0);
+				EUTS_Mesh_bind(&islandMesh, &renderState);
+				EUTS_Render_bindTexture(&renderState, islandTexture.textureView, 0);
+				renderState.deviceContext->DrawIndexed(islandMesh.indexCount, 0, 0);
 
-			EUTS_ShaderConstants_setModelMatrix(&shaderConstants, &renderState, &XMMatrixIdentity());
-			EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
-			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(6.0f, 0.0f, 0.0f), &renderState);
-			EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f));
-			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 6.0f, 0.0f), &renderState);
-			EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
-			EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 6.0f), &renderState);
+				EUTS_ShaderConstants_setModelMatrix(&shaderConstants, &renderState, &XMMatrixIdentity());
+				EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
+				EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(6.0f, 0.0f, 0.0f), &renderState);
+				EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f));
+				EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 6.0f, 0.0f), &renderState);
+				EUTS_ShaderConstants_setColor(&shaderConstants, &renderState, &XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
+				EUTS_DebugRender_drawLine(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 6.0f), &renderState);
+			}
 
 			if (glow)
 			{
@@ -213,12 +239,12 @@ int main()
 					ImGui::End();
 				}
 			
-				sunDirection.x = guiSunDirection[0];
-				sunDirection.y = guiSunDirection[1];
-				sunDirection.z = guiSunDirection[2];
-				sunColor.x = guiSunColor[0];
-				sunColor.y = guiSunColor[1];
-				sunColor.z = guiSunColor[2];
+				sunLight.direction.x = guiSunDirection[0];
+				sunLight.direction.y = guiSunDirection[1];
+				sunLight.direction.z = guiSunDirection[2];
+				sunLight.diffuse.x = guiSunColor[0];
+				sunLight.diffuse.y = guiSunColor[1];
+				sunLight.diffuse.z = guiSunColor[2];
 			
 
 				ImGui::Render();
@@ -232,6 +258,7 @@ int main()
 	EUTS_DepthBuffer_finalize(&blurDepth);
 	EUTS_RenderTarget_finalize(&renderTarget);
 	EUTS_RenderTarget_finalize(&blurTarget);
+	EUTS_RenderTarget_finalize(&shadowTarget);
 	EUTS_Texture_delete(&treeTexture);
 	EUTS_Texture_delete(&islandTexture);
 	EUTS_Mesh_finalize(&quadMesh);

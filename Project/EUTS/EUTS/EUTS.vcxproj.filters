@@ -49,6 +49,9 @@
     <ClCompile Include="..\..\..\Source\imgui\imgui_draw.cpp">
       <Filter>Imgui</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Source\light.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\render.h">
@@ -92,6 +95,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Source\imgui\imgui.h">
       <Filter>Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\light.h">
+      <Filter>Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
